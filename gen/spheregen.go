@@ -18,6 +18,9 @@ func main() {
 
 	fc, _ := os.Create("out/realTilesCurve.obj")
 	GenCurveOBJ(fc, 0.5, 0.5, 5, 5, maxTheta)
+
+	fcu, _ := os.Create("out/realTilesCube.obj")
+	fmt.Println(GenHalfCubeOBJ(fcu, 0.5, 0.5, 5, 5, 2.5))
 }
 
 // generate some xy coordinates
@@ -511,6 +514,137 @@ func ThreeDistance(x1, x2, y1, y2, z1, z2 float64) float64 {
 	return math.Sqrt(math.Pow((x1)-x2, 2) + math.Pow(y1-y2, 2) + math.Pow(z1-z2, 2))
 }
 
+/*
+width is x plane
+depth is y plane
+height is z plane
+*/
+func GenHalfCubeOBJ(w io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64) error {
+
+	// check the dimensions
+	if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
+		return fmt.Errorf("cubewidth of %v does", CubeWidth)
+	}
+
+	if int(math.Ceil(CubeHeight/tileHeight)) != int(CubeHeight/tileHeight) {
+		return fmt.Errorf("tile height of %v is not an integer multiple of a cube height of %v", tileHeight, CubeHeight)
+	}
+
+	// start at 0,0
+
+	// calculate the uv ,ap
+
+	uStep := tileWidth / (CubeWidth + CubeDepth*2)
+	vStep := tileHeight / (CubeDepth*2 + CubeHeight)
+
+	type plane struct {
+		iEnd, jEnd     float64
+		iStep, jStep   float64
+		iStart, jStart float64
+		uStart, vStart float64
+		// the plane value that isn't moved
+		planeConst float64
+		plane      string
+		inverse    bool
+	}
+
+	planes := []plane{
+		// left wall
+		{iEnd: CubeDepth, jEnd: CubeHeight, iStep: tileWidth, jStep: tileHeight, planeConst: 0, plane: "y", vStart: (CubeDepth / tileHeight) * vStep, inverse: true, uStart: ((CubeDepth + CubeWidth) / tileWidth) * uStep},
+		// right wall
+		{iEnd: CubeDepth, jEnd: CubeHeight, iStep: tileWidth, jStep: tileHeight, planeConst: CubeWidth, plane: "y", vStart: (CubeDepth / tileHeight) * vStep},
+
+		// back wall
+		{iEnd: CubeWidth, jEnd: CubeHeight, iStep: tileWidth, jStep: tileHeight, planeConst: CubeDepth, plane: "x", vStart: (CubeDepth / tileHeight) * vStep, uStart: ((CubeDepth) / tileWidth) * uStep},
+
+		// Top
+		{iEnd: CubeDepth, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, planeConst: CubeHeight, plane: "z", vStart: ((CubeDepth + CubeHeight) / tileHeight) * vStep, uStart: ((CubeDepth) / tileWidth) * uStep},
+
+		// Bottom
+		{iEnd: CubeDepth, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, inverse: true, planeConst: 0, plane: "z", uStart: ((CubeDepth) / tileWidth) * uStep},
+	}
+	count := 1
+
+	for _, p := range planes {
+
+		uTotal := (p.iEnd - p.iStart) / p.iStep
+		width := uTotal * uStep
+
+		ujTotal := (p.jEnd - p.jStart) / p.iStep
+		ujwidth := ujTotal * uStep
+		iCount := 0
+		for i := p.iStart; i < p.iEnd; i += p.iStep {
+
+			jCount := 0
+			for j := p.jStart; j < p.jEnd; j += p.jStep {
+
+				switch p.plane {
+				case "x":
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)))
+
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+
+				case "y":
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j+p.jStep)))
+
+					if p.inverse {
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					} else {
+
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					}
+
+				case "z":
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j, p.planeConst)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)))
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)))
+
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
+					/*
+						v1 = vertex{X: x, Y: y, Z: p.Z}
+						v2 = vertex{X: x + steper, Y: y, Z: p.Z}
+						v3 = vertex{X: x + steper, Y: y + steper, Z: p.Z}
+						v4 = vertex{X: x, Y: y + steper, Z: p.Z}*/
+				default:
+					continue
+				}
+
+				w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+				count += 4
+				jCount++
+			}
+			iCount++
+		}
+	}
+
+	return nil
+
+}
+
+func PlaneCalc(xshift, yshift, zshift float64, xOrigin, yOrigin, zOrigin float64, zEnd, yEnd, Zend float64) {
+
+}
+
 // Angle in radians
 func GenCurveOBJ(w io.Writer, tileHeight, tileWidth float64, cylinderRadius, cylinderHeight, azimuthMaxAngle float64) {
 	// r phi z
@@ -555,6 +689,8 @@ func GenCurveOBJ(w io.Writer, tileHeight, tileWidth float64, cylinderRadius, cyl
 
 		}
 
+		// increase the z height
+		// as well as the uv map height
 		v += vheight
 		z += tileHeight
 		azimuth = -azimuthMaxAngle
