@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 	"slices"
+
+	"encoding/json"
 )
 
 func main() {
@@ -14,13 +16,16 @@ func main() {
 	maxAngle := 30.0
 	maxTheta := (math.Pi / 180) * maxAngle
 	GenSphereOBJ(f, 0.5, 0.5, 5, maxTheta, maxTheta)
+	//ObjToTsig("out/realTiles.obj", 100, 100)
 	//sphere()
 
 	fc, _ := os.Create("out/realTilesCurve.obj")
-	GenCurveOBJ(fc, 0.5, 0.5, 5, 5, maxTheta)
+	fct, _ := os.Create("out/realTilesCurve.json")
+	GenCurveOBJ(fc, fct, 0.5, 0.5, 5, 5, maxTheta, 500, 500)
 
 	fcu, _ := os.Create("out/realTilesCube.obj")
-	fmt.Println(GenHalfCubeOBJ(fcu, 0.5, 0.5, 5, 5, 2.5))
+	fcut, _ := os.Create("out/realTilesCube.json")
+	fmt.Println(GenHalfCubeOBJ(fcu, fcut, 0.5, 0.5, 5, 5, 2.5, 500, 500))
 }
 
 // generate some xy coordinates
@@ -519,7 +524,7 @@ width is x plane
 depth is y plane
 height is z plane
 */
-func GenHalfCubeOBJ(w io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64) error {
+func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64, dx, dy float64) error {
 
 	// check the dimensions
 	if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
@@ -531,6 +536,18 @@ func GenHalfCubeOBJ(w io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeH
 	}
 
 	// start at 0,0
+
+	pixelWidth := (CubeWidth + CubeDepth*2) * dx
+	pixelHeight := (CubeDepth*2 + CubeHeight) * dy
+
+	// rows * column
+	leftRight := int((CubeDepth * 2 / tileWidth) * (CubeHeight / tileHeight))
+	boots := int((CubeDepth * 2 / tileWidth) * (CubeWidth / tileHeight))
+	back := int((CubeHeight / tileHeight) * (CubeWidth / tileWidth))
+
+	fmt.Println(leftRight, boots, back)
+
+	tiles := make([]Tilelayout, leftRight+boots+back)
 
 	// calculate the uv ,ap
 
@@ -564,6 +581,7 @@ func GenHalfCubeOBJ(w io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeH
 		{iEnd: CubeDepth, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, planeConst: 0, plane: "z", uStart: ((CubeDepth) / tileWidth) * uStep},
 	}
 	count := 1
+	tCount := 0
 
 	for _, p := range planes {
 
@@ -581,65 +599,73 @@ func GenHalfCubeOBJ(w io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeH
 				switch p.plane {
 				case "x":
 
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)))
 
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
 
 				case "y":
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j+p.jStep)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j+p.jStep)))
 
 					// if inversed change the direction of the uv map
 					if p.inverse {
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+
 					} else {
 
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-						w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
 					}
 
 				case "z":
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j, p.planeConst)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)))
-					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j, p.planeConst)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)))
+					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)))
 
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
+					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
 
 				default:
 					continue
 				}
 
-				w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+				tiles[tCount] = Tilelayout{Layout: Positions{Flat: XY{X: int((p.uStart + width - float64(iCount)*uStep) * pixelWidth), Y: int((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+
+				wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 				count += 4
 				jCount++
+				tCount++
 			}
 			iCount++
 		}
 	}
+	tsig := TPIG{Tilelayout: tiles, Dimensions: Dimensions{Flat: XY2D{X0: 0, X1: int(pixelWidth), Y0: 0, Y1: int(pixelHeight)}}}
 
-	return nil
+	enc := json.NewEncoder(wTsig)
+	enc.SetIndent("", "    ")
+
+	return enc.Encode(tsig)
 
 }
 
 // Angle in radians
-func GenCurveOBJ(w io.Writer, tileHeight, tileWidth float64, cylinderRadius, cylinderHeight, azimuthMaxAngle float64) {
+func GenCurveOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float64, cylinderRadius, cylinderHeight, azimuthMaxAngle float64, dx, dy float64) {
 	// r phi z
 	azimuthInc := (2 * math.Asin(tileWidth/(2*cylinderRadius)))
 
@@ -647,39 +673,50 @@ func GenCurveOBJ(w io.Writer, tileHeight, tileWidth float64, cylinderRadius, cyl
 	count := 1
 	azimuth := -azimuthMaxAngle
 
-	uWidth := 1 / (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
+	pixelWidth := math.Ceil(2*azimuthMaxAngle/azimuthInc) * dx
+	pixelHeight := math.Ceil(cylinderHeight/tileHeight) * dy
+
+	// rows * column
+	tiles := make([]Tilelayout, int(math.Ceil(2*azimuthMaxAngle/azimuthInc)*math.Ceil(cylinderHeight/tileHeight)))
+
+	uWidth := 1 / (math.Ceil(2 * azimuthMaxAngle / azimuthInc))
 	vheight := 1 / math.Ceil(cylinderHeight/tileHeight)
 	v := 0.0
+
+	i := 0
 	for z < cylinderHeight {
 		u := 1.0
 
-		for azimuth < azimuthMaxAngle {
+		for azimuth <= azimuthMaxAngle {
 			//	tileCount++
 
 			// get angle change
 
 			x1, y1, z1 := CylindricalToCartesian(cylinderRadius, z, azimuth)
-			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v)))
+			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
+			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v)))
 
 			x2, y2, z2 := CylindricalToCartesian(cylinderRadius, z, azimuth+azimuthInc) // increase azimuth
-			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v)))
+			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
+			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v)))
 
 			x3, y3, z3 := CylindricalToCartesian(cylinderRadius, z+tileHeight, azimuth+azimuthInc) // increase azimuth and height
-			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v+vheight)))
+			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v+vheight)))
 
 			x4, y4, z4 := CylindricalToCartesian(cylinderRadius, z+tileHeight, azimuth) // increase height
-			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v+vheight)))
+			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v+vheight)))
 
-			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 
 			azimuth += azimuthInc
 			u -= uWidth
 			count += 4
 
+			tiles[i] = Tilelayout{Layout: Positions{Flat: XY{X: int(u * pixelWidth), Y: int((1 - (v + vheight)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+
+			i++
 		}
 
 		// increase the z height
@@ -688,6 +725,11 @@ func GenCurveOBJ(w io.Writer, tileHeight, tileWidth float64, cylinderRadius, cyl
 		z += tileHeight
 		azimuth = -azimuthMaxAngle
 	}
+	tsig := TPIG{Tilelayout: tiles, Dimensions: Dimensions{Flat: XY2D{X0: 0, X1: int(pixelWidth), Y0: 0, Y1: int(pixelHeight)}}}
+
+	enc := json.NewEncoder(wTsig)
+	enc.SetIndent("", "    ")
+	enc.Encode(tsig)
 
 }
 
@@ -706,13 +748,26 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 	uWidth := 1 / (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
 	vheight := 1 / (2 * math.Ceil(thetaMaxAngle/thetaInc))
 
+	/*
+		tileX := tileWidth / 0.001 //consitent dy dx for the moment
+		tileY := tileHeight / 0.001
+		sizeX := tileX * (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
+		sizeY := tileY * (2 * math.Ceil(thetaMaxAngle/thetaInc))
+	*/
+
+	//sizex := 3840
+	/*
+	   generate the size of the bas eimage then move erveything along
+	*/
 	// TOP
 	v := 0.5
 	for theta > (math.Pi/2)-thetaMaxAngle {
 		//start Point :=
 		topLeftThet := theta - thetaInc
 		topLeftAz := azimuth
+		botLeftAz := azimuth
 		u := 0.5
+		prevUshift := 0.0
 
 		for azimuth < azimuthMaxAngle {
 			//	tileCount++
@@ -723,11 +778,15 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz)
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v)))
 
+			d := 2 * sphereRadius * math.Sin(topLeftAz-botLeftAz)
+
+			shift := int(d / (0.0015625))
+			ushift := float64(shift) * (1.0 / 3840.0)
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+ushift+prevUshift), v)))                  // this U needs to shift to the right
 			x2, y2, z2 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthInc) // increase azimuth
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth+ushift+prevUshift), v)))
 
 			x3, y3, z3 := PolarToCartesian(sphereRadius, topLeftThet, topLeftAz+azimuthIncTop) // increase azimuth and height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
@@ -735,14 +794,18 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 			x4, y4, z4 := PolarToCartesian(sphereRadius, topLeftThet, topLeftAz) // increase height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v+vheight)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v+vheight)))
 
 			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 
+			//			fmt.Println("4", 1-(u), "3", 1-(u+uWidth))
+			//			fmt.Println("shift", ushift, prevUshift)
+			botLeftAz = topLeftAz + azimuthInc
 			azimuth += azimuthIncTop
 			topLeftAz = azimuth
 			count += 4
 			u += uWidth
+			prevUshift = ushift
 		}
 
 		topRightAz := clockAz
