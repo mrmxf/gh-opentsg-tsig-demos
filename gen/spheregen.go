@@ -15,6 +15,10 @@ func main() {
 	maxTheta := (math.Pi / 180) * maxAngle
 
 	GenSphereOBJ(f, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
+
+	fs, _ := os.Create("out/realTilesSmall.obj")
+
+	GenSphereOBJ(fs, 1, 1, 5, maxTheta, maxTheta, 1000, 1000)
 	//ObjToTsig("out/realTiles.obj", 100, 100) 6000,6000
 	//sphere()
 
@@ -305,8 +309,11 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 	azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius)))
 	theta = (math.Pi / 2)
 
+	// @TODO deal with the slight voerlaps
+
 	uWidth := 1 / (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
 	vheight := 1 / (2 * math.Ceil(thetaMaxAngle/thetaInc))
+
 	maxX := 2 * math.Ceil(azimuthMaxAngle/azimuthInc) * dx
 	/*
 		tileX := tileWidth / 0.001 //consitent dy dx for the moment
@@ -325,18 +332,24 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 		//start Point :=
 		topLeftThet := theta - thetaInc
 		topLeftAz := azimuth
-		//	botLeftAz := azimuth
+		// botLeftAz := azimuth
 
 		u := 0.5
 		uBot := 0.5
 		//		prevUshift := 0.0
 
+		azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+		azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(topLeftThet)
+
+		futDif := 2 * sphereRadius * (math.Sin((azimuthIncTop-azimuthInc)/2) * math.Sin(theta))
+
+		shift := int((futDif) / (tileWidth / dx))
+		ushift := float64(shift/2) * (1.0 / float64(maxX))
+		fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
 		for azimuth < azimuthMaxAngle {
 			//	tileCount++
 
 			// get angle change
-			azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
-			azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(topLeftThet)
 
 			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz)
 			w.Write([]byte(fmt.Sprintf("v %v %v %v #bottom left\n", x1, y1, z1)))
@@ -348,12 +361,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			x2, y2, z2 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthInc) // increase azimuth
 			w.Write([]byte(fmt.Sprintf("v %v %v %v # bottom right\n", x2, y2, z2)))
 
-			nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
-			futDif := ThreeDistance(x2, nlX, y2, nlY, z2, nlZ)
-			shift := int((futDif / 2) / (tileWidth / dx))
-			ushift := float64(shift) * (1.0 / float64(maxX))
-
-			fmt.Println((tileWidth / dx), maxX, tileWidth, dx)
+			// nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
 
 			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+ushift), v)))        // x1
 			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+uWidth+ushift), v))) //x2
@@ -372,7 +380,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 			//			fmt.Println("4", 1-(u), "3", 1-(u+uWidth))
 			//			fmt.Println("shift", ushift, prevUshift)
-			// botLeftAz = topLeftAz + azimuthInc
+			//		botLeftAz = topLeftAz + azimuthInc
 			uBot += uWidth + (ushift * 2)
 			azimuth += azimuthIncTop
 			topLeftAz = azimuth
@@ -384,18 +392,18 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 		topRightAz := clockAz
 		u = 0.5
+		uBot = 0.5
+
 		for clockAz > -thetaMaxAngle {
 			//	tileCount++
 
-			azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
-			azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(topLeftThet)
 			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topRightAz)
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-ushift), v)))
 
 			x2, y2, z2 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topRightAz-azimuthInc) // increase azimuth
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u-uWidth), v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-uWidth-ushift), v)))
 
 			x3, y3, z3 := PolarToCartesian(sphereRadius, topLeftThet, topRightAz-azimuthIncTop) // increase azimuth and height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
@@ -412,6 +420,9 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			topRightAz = clockAz
 			count += 4
 			u -= uWidth
+
+			uBot -= (uWidth + (ushift * 2))
+
 		}
 
 		theta -= thetaInc
@@ -431,18 +442,26 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 		botLeftThet := theta + thetaInc
 		botLeftAz := azimuth
 		u := 0.5
+		uTop := 0.5
+
+		azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+		azimuthIncBot := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(botLeftThet)
+
+		futDif := 2 * sphereRadius * (math.Sin((azimuthIncBot-azimuthInc)/2) * math.Sin(botLeftThet-thetaInc))
+
+		shift := int((futDif / 2) / (tileWidth / dx))
+
+		ushift := float64(shift) * (1.0 / float64(maxX))
 		for azimuth < thetaMaxAngle {
 			// tileCount++
 
-			azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
-			azimuthIncBot := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(botLeftThet)
 			x1, y1, z1 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botLeftAz)
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+ushift), v)))
 
 			x2, y2, z2 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botLeftAz+azimuthInc) // increase azimuth
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+ushift), v)))
 
 			x3, y3, z3 := PolarToCartesian(sphereRadius, botLeftThet, botLeftAz+azimuthIncBot) // increase azimuth and height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
@@ -450,7 +469,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 			x4, y4, z4 := PolarToCartesian(sphereRadius, botLeftThet, botLeftAz) // increase height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v-vheight)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v-vheight)))
 
 			//	fmt.Println(math.Sqrt(math.Pow((x2)-x1, 2)+math.Pow((y2)-y1, 2)) + math.Pow((z2)-z1, 2))
 
@@ -461,10 +480,13 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			botLeftAz = azimuth
 			count += 4
 			u += uWidth
+			// uTop += uWidth + (ushift * 2)'
+			uTop += uWidth + ushift
 		}
 
 		botRightAz := clockAz
 		u = 0.5
+		uTop = 0.5
 		for clockAz > -thetaMaxAngle {
 			// tileCount++
 
@@ -472,11 +494,11 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(botLeftThet)
 			x1, y1, z1 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botRightAz)
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-ushift), v)))
 
 			x2, y2, z2 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botRightAz-azimuthInc) // increase azimuth
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u-uWidth), v)))
+			w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth-ushift), v)))
 
 			x3, y3, z3 := PolarToCartesian(sphereRadius, botLeftThet, botRightAz-azimuthIncTop) // increase azimuth and height
 			w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
@@ -493,6 +515,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			botRightAz = clockAz
 			count += 4
 			u -= uWidth
+			uTop -= (uWidth + (ushift * 2))
 		}
 
 		v -= vheight
