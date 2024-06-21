@@ -18,7 +18,7 @@ func main() {
 
 	fs, _ := os.Create("out/realTilesSmall.obj")
 
-	GenSphereOBJ(fs, 1, 1, 5, maxTheta, maxTheta, 1000, 1000)
+	GenSphereOBJSquare(fs, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
 	//ObjToTsig("out/realTiles.obj", 100, 100) 6000,6000
 	//sphere()
 
@@ -314,6 +314,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 	uWidth := 1 / (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
 	vheight := 1 / (2 * math.Ceil(thetaMaxAngle/thetaInc))
 
+	//@TODO maybe add the ushift to everything
 	maxX := 2 * math.Ceil(azimuthMaxAngle/azimuthInc) * dx
 	/*
 		tileX := tileWidth / 0.001 //consitent dy dx for the moment
@@ -345,7 +346,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 
 		shift := int((futDif) / (tileWidth / dx))
 		ushift := float64(shift/2) * (1.0 / float64(maxX))
-		fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
+
 		for azimuth < azimuthMaxAngle {
 			//	tileCount++
 
@@ -516,6 +517,479 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 			count += 4
 			u -= uWidth
 			uTop -= (uWidth + (ushift * 2))
+		}
+
+		v -= vheight
+		theta += thetaInc
+		azimuth = 0
+		clockAz = 0
+		//fmt.Println("COINTER", theta, z, zinchold)
+		//	z = zinchold
+
+	}
+}
+
+// Angle in radians
+func GenSphereOBJSquare(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thetaMaxAngle, azimuthMaxAngle float64, dx, dy float64) {
+
+	azimuth, clockAz := 0.0, 0.0
+	// tileCount := 0
+	theta := math.Pi / 2
+	count := 1
+
+	thetaInc := 2 * (math.Asin(tileHeight / (2 * sphereRadius)))
+	azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius)))
+	theta = (math.Pi / 2)
+
+	// @TODO deal with the slight voerlaps
+
+	uWidth := 1 / (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
+	vheight := 1 / (2 * math.Ceil(thetaMaxAngle/thetaInc))
+
+	//@TODO maybe add the ushift to everything
+	maxX := 2 * math.Ceil(azimuthMaxAngle/azimuthInc) * dx
+	//maxY := 2 * math.Ceil(thetaMaxAngle/thetaInc) * dy
+	/*
+		tileX := tileWidth / 0.001 //consitent dy dx for the moment
+		tileY := tileHeight / 0.001
+		sizeX := tileX * (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
+		sizeY := tileY * (2 * math.Ceil(thetaMaxAngle/thetaInc))
+	*/
+
+	//sizex := 3840
+	/*
+	   generate the size of the bas eimage then move erveything along
+	*/
+	// TOP
+	v := 0.5
+	for theta > (math.Pi/2)-thetaMaxAngle {
+		//start Point :=
+		topLeftThet := theta - thetaInc
+		topLeftAz := azimuth
+		// botLeftAz := azimuth
+
+		u := 0.5
+		uBot := 0.5
+		//		prevUshift := 0.0
+
+		azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+		azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(topLeftThet)
+
+		futDif := 2 * sphereRadius * (math.Sin((azimuthIncTop-azimuthInc)/2) * math.Sin(theta))
+
+		shift := int((futDif) / (tileWidth / dx))
+		ushift := float64(shift/2) * (1.0 / float64(maxX))
+		//fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
+		dropCount := 0
+		for azimuth < azimuthMaxAngle {
+			//	tileCount++
+
+			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz)
+			x2, y2, z2 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthInc) // increase azimuth
+			x3, y3, z3 := PolarToCartesian(sphereRadius, topLeftThet, topLeftAz+azimuthIncTop)       // increase azimuth and height
+			x4, y4, z4 := PolarToCartesian(sphereRadius, topLeftThet, topLeftAz)                     // increase height to the bottom
+
+			if shift > 0 {
+				step := int(dy / float64(shift+1))
+				botX, botY, botZ := x1, y1, z1
+				botRX, botRY, botRZ := x2, y2, z2
+
+				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/dy, (float64(step)*(y4-y1))/dy, (float64(step)*(z4-z1))/dy
+				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/dy, (float64(step)*(y3-y2))/dy, (float64(step)*(z3-z2))/dy
+
+				//	vstep := float64(step) * (1.0 / float64(maxY))
+				vstep := (vheight / float64(shift+1))
+				ustep := (1.0 / float64(maxX))
+
+				for i := 0; i < shift; i++ {
+
+					//	fmt.Println(x1, y1, x2, z2)
+
+					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
+					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v\n", botX, botY, botZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+float64(shift-i+dropCount)*ustep), v+(float64(i)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+float64(shift-i+dropCount)*ustep), v+(float64(i)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+float64(shift-i+dropCount)*ustep), v+(float64(i+1)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+float64(shift-i+dropCount)*ustep), v+(float64(i+1)*vstep))))
+					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+					botX, botY, botZ = topX, topY, topZ
+					botRX, botRY, botRZ = topRX, topRY, topRZ
+					count += 4
+				}
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vheight-vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot), v+vheight-vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot), v+vheight)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vheight)))
+
+				dropCount++
+			} else {
+
+				// get angle change
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v #bottom left\n", x1, y1, z1)))
+				// increase azimuth
+				w.Write([]byte(fmt.Sprintf("v %v %v %v # bottom right\n", x2, y2, z2)))
+				// nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+ushift), v)))        // x1
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+uWidth+ushift), v))) //x2
+				//w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v)))        // x1
+				//	w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v))) //x2
+
+				// increase azimuth and height
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v+vheight)))
+
+				// increase height
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v+vheight)))
+
+			}
+			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+			// nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
+
+			//			fmt.Println("4", 1-(u), "3", 1-(u+uWidth))
+			//			fmt.Println("shift", ushift, prevUshift)
+			//		botLeftAz = topLeftAz + azimuthInc
+			uBot += uWidth
+			azimuth += azimuthIncTop
+			topLeftAz = azimuth
+			count += 4
+			u += uWidth
+
+		}
+
+		topRightAz := clockAz
+		u = 0.5
+		uBot = 0.5
+
+		for clockAz > -thetaMaxAngle {
+
+			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topRightAz)
+			x2, y2, z2 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topRightAz-azimuthInc)
+			x3, y3, z3 := PolarToCartesian(sphereRadius, topLeftThet, topRightAz-azimuthIncTop)
+			x4, y4, z4 := PolarToCartesian(sphereRadius, topLeftThet, topRightAz)
+
+			if shift > 0 {
+				step := int(dy / float64(shift+1))
+				botX, botY, botZ := x1, y1, z1
+				botRX, botRY, botRZ := x2, y2, z2
+
+				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/dy, (float64(step)*(y4-y1))/dy, (float64(step)*(z4-z1))/dy
+				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/dy, (float64(step)*(y3-y2))/dy, (float64(step)*(z3-z2))/dy
+
+				//	vstep := float64(step) * (1.0 / float64(maxY))
+				vstep := (vheight / float64(shift+1))
+				ustep := (1.0 / float64(maxX))
+
+				for i := 0; i < shift; i++ {
+
+					//	fmt.Println(x1, y1, x2, z2)
+					//////////////TARGET//////////////
+
+					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
+					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-float64(shift-i+dropCount)*ustep), v+(float64(i)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uWidth+uBot-float64(shift-i+dropCount)*ustep), v+(float64(i)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uWidth+uBot-float64(shift-i+dropCount)*ustep), v+(float64(i+1)*vstep))))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-float64(shift-i+dropCount)*ustep), v+(float64(i+1)*vstep))))
+					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+					botX, botY, botZ = topX, topY, topZ
+					botRX, botRY, botRZ = topRX, topRY, topRZ
+					count += 4
+				}
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vheight-vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uWidth+uBot), v+vheight-vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uWidth+uBot), v+vheight)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vheight)))
+
+				dropCount++
+			} else {
+				//	tileCount++
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-ushift), v)))
+
+				// increase azimuth
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-uWidth-ushift), v)))
+
+				// increase azimuth and height
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u-uWidth), v+vheight)))
+
+				// increase height
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v+vheight)))
+			}
+
+			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
+			clockAz -= azimuthIncTop
+			topRightAz = clockAz
+			count += 4
+			u -= uWidth
+
+			uBot -= (uWidth)
+
+		}
+
+		theta -= thetaInc
+		azimuth = 0
+		clockAz = 0
+		v += vheight
+		//fmt.Println("COINTER", theta, z, zinchold)
+		//	z = zinchold
+
+	}
+
+	// Bottom
+	v = 0.5
+	theta = math.Pi / 2
+	for theta < (math.Pi/2)+thetaMaxAngle {
+		//start Point :=
+		botLeftThet := theta + thetaInc
+		botLeftAz := azimuth
+		u := 0.5
+		uTop := 0.5
+
+		azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+		azimuthIncBot := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(botLeftThet)
+
+		futDif := 2 * sphereRadius * (math.Sin((azimuthIncBot-azimuthInc)/2) * math.Sin(botLeftThet-thetaInc))
+
+		shift := int((futDif / 2) / (tileWidth / dx))
+
+		ushift := float64(shift) * (1.0 / float64(maxX))
+		dropCount := 0
+
+		for azimuth < thetaMaxAngle {
+
+			// tileCount++
+			x1, y1, z1 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botLeftAz)
+			x2, y2, z2 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botLeftAz+azimuthInc) // increase azimuth
+			x3, y3, z3 := PolarToCartesian(sphereRadius, botLeftThet, botLeftAz+azimuthIncBot)       // increase azimuth and height
+			x4, y4, z4 := PolarToCartesian(sphereRadius, botLeftThet, botLeftAz)                     // increase height
+			if shift > 0 {
+				step := int(dy / float64(shift+1))
+				topX, topY, topZ := x1, y1, z1
+				topRX, topRY, topRZ := x2, y2, z2
+
+				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/dy, (float64(step)*(y4-y1))/dy, (float64(step)*(z4-z1))/dy
+				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/dy, (float64(step)*(y3-y2))/dy, (float64(step)*(z3-z2))/dy
+
+				//	vstep := float64(step) * (1.0 / float64(maxY))
+				vstep := (vheight / float64(shift+1))
+				ustep := (1.0 / float64(maxX))
+
+				for i := 0; i < shift; i++ {
+
+					botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
+					botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64(shift-i+dropCount)*ustep), v-float64(i)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64(shift-i+dropCount)*ustep), v-float64(i)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64(shift-i+dropCount)*ustep), v-float64(i+1)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64(shift-i+dropCount)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+					topX, topY, topZ = botX, botY, botZ
+					topRX, topRY, topRZ = botRX, botRY, botRZ
+					count += 4
+				}
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift)*vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth), v-float64(shift)*vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth), v-float64(shift+1)*vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift+1)*vstep)))
+				//	leftVectX, leftVectY, leftVectZ := (x4-x1)/dy, (y4-y1)/dy, (z4-z1)/dy
+				//	rightVectX, rightVectY, rightVectZ := (x3-x2)/dy, (y3-y2)/dy, (z3-z2)/dy
+				/*
+
+						handle the u differently
+
+						numberOfShifs := shift
+
+					// +1 to rember the 0th line and get the correct amount of increments
+					fmt.Println("step", shift+1, thetaInc, int(dy/float64(shift+1)))
+				*/
+				dropCount++
+				// print the length difference along the
+			} else {
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+ushift), v)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+ushift), v)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v-vheight)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v-vheight)))
+
+			}
+
+			//	fmt.Println(math.Sqrt(math.Pow((x2)-x1, 2)+math.Pow((y2)-y1, 2)) + math.Pow((z2)-z1, 2))
+
+			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
+			azimuth += azimuthIncBot
+			botLeftAz = azimuth
+			count += 4
+			u += uWidth
+			// uTop += uWidth + (ushift * 2)'
+			uTop += uWidth //+ ushift
+		}
+
+		botRightAz := clockAz
+		u = 0.5
+		uTop = 0.5
+		dropCount = 0
+		for clockAz > -thetaMaxAngle {
+
+			azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+			azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(botLeftThet)
+			x1, y1, z1 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botRightAz)
+			x2, y2, z2 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botRightAz-azimuthInc) // increase azimuth
+			x3, y3, z3 := PolarToCartesian(sphereRadius, botLeftThet, botRightAz-azimuthIncTop)       // increase azimuth and height
+			x4, y4, z4 := PolarToCartesian(sphereRadius, botLeftThet, botRightAz)                     // increase height to the bottom
+
+			if shift > 0 {
+				step := int(dy / float64(shift+1))
+				topX, topY, topZ := x1, y1, z1
+				topRX, topRY, topRZ := x2, y2, z2
+
+				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/dy, (float64(step)*(y4-y1))/dy, (float64(step)*(z4-z1))/dy
+				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/dy, (float64(step)*(y3-y2))/dy, (float64(step)*(z3-z2))/dy
+
+				//	vstep := float64(step) * (1.0 / float64(maxY))
+				vstep := (vheight / float64(shift+1))
+				ustep := (-1.0 / float64(maxX))
+
+				//fmt.Println("start")
+				for i := 0; i < shift; i++ {
+
+					//	fmt.Println(x1, y1, x2, z2)
+
+					botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
+					botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64(shift-i+dropCount)*ustep), v-float64(i)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64(shift-i+dropCount)*ustep), v-float64(i)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64(shift-i+dropCount)*ustep), v-float64(i+1)*vstep)))
+
+					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64(shift-i+dropCount)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+					topX, topY, topZ = botX, botY, botZ
+					topRX, topRY, topRZ = botRX, botRY, botRZ
+					count += 4
+				}
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vheight+vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth), v-vheight+vstep)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth), v-vheight)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vheight)))
+				//	leftVectX, leftVectY, leftVectZ := (x4-x1)/dy, (y4-y1)/dy, (z4-z1)/dy
+				//	rightVectX, rightVectY, rightVectZ := (x3-x2)/dy, (y3-y2)/dy, (z3-z2)/dy
+				/*
+
+					handle the u differently
+
+					numberOfShifs := shift
+				*/
+				// +1 to rember the 0th line and get the correct amount of increments
+
+				dropCount++
+			} else {
+				// tileCount++
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-ushift), v)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth-ushift), v)))
+
+				// increase azimuth and height
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth), v-vheight)))
+
+				w.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
+				w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-uTop, v-vheight)))
+
+			}
+			w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+
+			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
+			clockAz -= azimuthIncTop
+			botRightAz = clockAz
+			count += 4
+			u -= uWidth
+			uTop -= (uWidth) // + (ushift * 2))
 		}
 
 		v -= vheight
