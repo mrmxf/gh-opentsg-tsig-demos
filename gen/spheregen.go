@@ -458,7 +458,7 @@ func GenSphereOBJ(w io.Writer, tileHeight, tileWidth float64, sphereRadius, thet
 		shift := int((futDif / 2) / (tileWidth / dx))
 
 		ushift := float64(shift) * (1.0 / float64(maxX))
-		for azimuth < thetaMaxAngle {
+		for azimuth < azimuthMaxAngle {
 			// tileCount++
 
 			x1, y1, z1 := PolarToCartesian(sphereRadius, botLeftThet-thetaInc, botLeftAz)
@@ -559,8 +559,57 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 		tileY := tileHeight / 0.001
 		sizeX := tileX * (2 * math.Ceil(azimuthMaxAngle/azimuthInc))
 		sizeY := tileY * (2 * math.Ceil(thetaMaxAngle/thetaInc))
+
+
 	*/
+	overrun := 1.0
+
+	for theta > (math.Pi/2)-thetaMaxAngle {
+		topLeftTheta := theta - thetaInc
+		azimuth := 0.0
+
+		azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
+		azimuthIncTop := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(topLeftTheta)
+
+		// futDif is the length chordal length difference of the azimuth change on the bottom row.
+		// which is the closest current approximation
+		futDif := 2 * sphereRadius * (math.Sin((azimuthIncTop-azimuthInc)/2) * math.Sin(theta))
+
+		// find the difference in pixels
+		shift := int((futDif)/(tileWidth/dx)) / 2
+		ushift := (float64(shift)) * (1.0 / float64(maxX))
+
+		//fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
+		uTop := 0.5
+		for azimuth < azimuthMaxAngle {
+			azimuth += azimuthIncTop
+
+			uTop += uWidth + (ushift * 2)
+
+		}
+
+		if uTop > overrun {
+			overrun = uTop
+		}
+
+		theta -= thetaInc
+	}
+
+	theta = math.Pi / 2
+
+	xInc := 0.0
+	if overrun > 1.0 {
+		xInc = math.Round((overrun - 1) * maxX)
+	}
+
+	// update the parameters to account for the overrun
+	// of tiles
+	maxX = maxX + xInc*2
+	uWidth = dx / maxX
+
 	tiles := []Tilelayout{}
+
+	// -33 is the lowest
 	//sizex := 3840
 	/*
 	   generate the size of the bas eimage then move erveything along
@@ -590,7 +639,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 		ushift := (float64(shift)) * (1.0 / float64(maxX))
 
 		//fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
-		dropCount := 0
+		radialInc := 0
 
 		for azimuth < azimuthMaxAngle {
 			//	tileCount++
@@ -629,22 +678,23 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
 					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
 					pos := shift - i
+					offset := float64((pos))*ustep + float64(radialInc*pos)*ustep
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v\n", botX, botY, botZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+float64((pos))*ustep+float64(dropCount*pos)*ustep), v+(float64(i)*vstep))))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i)*vstep))))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+float64((pos))*ustep+float64(dropCount*pos)*ustep), v+(float64(i)*vstep))))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+offset), v+(float64(i)*vstep))))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+float64((pos))*ustep+float64(dropCount*pos)*ustep), v+(float64(i+1)*vstep))))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uWidth+uBot+offset), v+(float64(i+1)*vstep))))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+float64((pos))*ustep+float64(dropCount*pos)*ustep), v+(float64(i+1)*vstep))))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i+1)*vstep))))
 					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 
 					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uBot + uWidth + float64((pos))*ustep + float64(dropCount*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
+						Flat: XY{X: int((1 - (uBot + uWidth + offset)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
 						Size: XY{X: int(dx), Y: int(maxY * vstep)}}})
 
 					botX, botY, botZ = topX, topY, topZ
@@ -669,7 +719,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					Flat: XY{X: int((1 - (uBot + uWidth)) * maxX), Y: int(math.Round((1 - (v + vheight)) * maxY))},
 					Size: XY{X: int(dx), Y: int(math.Round(maxY * (vheight - vstep*(float64(shift)))))}}})
 
-				// dropCount++
+				// radialInc++
 			} else {
 
 				// get angle change
@@ -708,7 +758,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 			topLeftAz = azimuth
 			count += 4
 			u += uWidth
-			dropCount += 2
+			radialInc += 2
 
 		}
 
@@ -716,7 +766,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 		u = 0.5
 		uBot = 0.5
 
-		dropCount = 0
+		radialInc = 0
 		for clockAz > -thetaMaxAngle {
 
 			x1, y1, z1 := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topRightAz)
@@ -744,7 +794,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
 					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
 					pos := shift - i
-					stepOffset := -float64((pos))*ustep - float64(dropCount*pos)*ustep
+					stepOffset := -float64((pos))*ustep - float64(radialInc*pos)*ustep
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
 					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+stepOffset), v+(float64(i)*vstep))))
@@ -784,7 +834,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					Flat: XY{X: int((1 - uBot) * maxX), Y: int(math.Round((1 - (v + vheight)) * maxY))},
 					Size: XY{X: int(dx), Y: int(math.Round(maxY * (vheight - vstep*(float64(shift)))))}}})
 
-				// dropCount++
+				// radialInc++
 			} else {
 				//	tileCount++
 
@@ -811,7 +861,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 			topRightAz = clockAz
 			count += 4
 			u -= uWidth
-			dropCount += 2
+			radialInc += 2
 			uBot -= (uWidth)
 
 		}
@@ -843,7 +893,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 		shift := int((futDif / 2) / (tileWidth / dx))
 
 		ushift := float64(shift) * (1.0 / float64(maxX))
-		dropCount := 0
+		radialInc := 0
 
 		for azimuth < thetaMaxAngle {
 
@@ -871,20 +921,20 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					pos := shift - i
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
 					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 
 					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uTop + uWidth + float64((pos))*ustep + float64(dropCount*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
+						Flat: XY{X: int((1 - (uTop + uWidth + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
 						Size: XY{X: int(dx), Y: int(maxY * vstep)}}})
 
 					topX, topY, topZ = botX, botY, botZ
@@ -948,13 +998,13 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 			u += uWidth
 			// uTop += uWidth + (ushift * 2)'
 			uTop += uWidth //+ ushift
-			dropCount += 2
+			radialInc += 2
 		}
 
 		botRightAz := clockAz
 		u = 0.5
 		uTop = 0.5
-		dropCount = 0
+		radialInc = 0
 		for clockAz > -thetaMaxAngle {
 
 			azimuthInc := (2 * math.Asin(tileWidth/(2*sphereRadius))) / math.Sin(theta)
@@ -986,20 +1036,20 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 					pos := shift - i
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
 
 					w.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(dropCount*pos)*ustep), v-float64(i+1)*vstep)))
+					w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
 					w.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
 
 					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uTop + float64((pos))*ustep + float64(dropCount*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
+						Flat: XY{X: int((1 - (uTop + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
 						Size: XY{X: int(dx), Y: int(maxY * vstep)}}})
 
 					topX, topY, topZ = botX, botY, botZ
@@ -1055,7 +1105,7 @@ func GenSphereOBJSquare(w, wTsig io.Writer, tileHeight, tileWidth float64, spher
 			clockAz -= azimuthIncTop
 			botRightAz = clockAz
 			count += 4
-			dropCount += 2
+			radialInc += 2
 			u -= uWidth
 			uTop -= (uWidth) // + (ushift * 2))
 		}
