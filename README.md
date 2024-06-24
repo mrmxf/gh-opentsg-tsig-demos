@@ -1,35 +1,59 @@
 # tsig demos
 
-A demo repo for making some TSIGS and corresponding
-OBJ files.
+A demo repo for making 3d displays in the
+[obj](https://en.wikipedia.org/wiki/Wavefront_.obj_file) and
+[TSIG](https://link.to.tsig) formats.
 
-Available shapes are
+Available display shapes are
 
-- open cube
-- Cylindrical wall
-- Spherical style -not yet finished
-
-Discuss the pixel perfect and dream layout difference here
-Include pictures explaing the lines.
+- An open cube (No front wall panel)
+- A curved cylindrical wall
+- Spherical  display
 
 ## Getting started
 
 Talk about OpenTSG and TSIGs here
 
-## Dev updates etc
+## Installation
+
+Make sure you have the latest version of [Go](https://go.dev/doc/install) installed.
+
+Then run the go build command to compile the code.
+
+```cmd
+go build
+```
+
+## Running the program
+
+Here's a list of
+the demos for the 
+different shaped objects
+
+- [Cube](#cube-demo)
+- [Curve](#curve-demo)
+- [Sphere](#sphere-demo)
+
+Once a demo has been run plug it into openTSG
+
+### Cube Demo
+
+### Curve Demo
+
+### Sphere Demo
 
 ## Golden ratios
 
-## Repo Design
-
-target audience is a python front end user and some idea of what they are trying to achieve
-
-custom TSIG to make their stuff work.
-Get it going side - design methodology what was tristan on.
+Any numbers that seem to work really well.
+e.g. Dx* tile width / radius must = 5
 
 ## Installation manual
 
 yamls with comments!
 json agnostic
 
-## User Manual
+## Technical stuff
+
+Design thoughts
+formulas used.
+The sphere uv map
