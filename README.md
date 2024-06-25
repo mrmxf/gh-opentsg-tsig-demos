@@ -36,7 +36,9 @@ go build
 
 Here's a list of
 the demos for the
-different shaped objects
+different shaped objects.
+
+Ensure it is installed an running
 
 - [Cube](#cube-demo)
 - [Curve](#curve-demo)
@@ -46,9 +48,21 @@ Once a demo has been run plug it into openTSG.
 
 ### Cube Demo
 
+```cmd
+./generator cube --conf ./examples/cube.yaml --outputFile ./examples/cube
+```
+
 ### Curve Demo
 
+```cmd
+./generator curve --conf ./examples/curve.yaml --outputFile ./examples/curve
+```
+
 ### Sphere Demo
+
+```cmd
+./generator sphere--conf ./examples/sphere.yaml --outputFile ./examples/sphere
+```
 
 ## Golden ratios
 
