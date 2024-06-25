@@ -1,11 +1,5 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/udhos/gwob"
-)
-
 type TPIGCompile struct {
 	TPIGS      []Imports  `json:"tpig include"`
 	Dimensions Dimensions `json:"Dimensions"`
@@ -54,6 +48,7 @@ type XY2D struct {
 	Y1 int `json:"Y1"`
 }
 
+/*
 func ObjToTsig(file string, xCount, yCount float32) error {
 	o, e := gwob.NewObjFromFile(file, &gwob.ObjParserOptions{})
 
@@ -97,3 +92,4 @@ func ObjToTsig(file string, xCount, yCount float32) error {
 	fmt.Println(tsig)
 	return nil
 }
+*/

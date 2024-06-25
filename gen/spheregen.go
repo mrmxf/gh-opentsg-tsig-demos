@@ -71,31 +71,36 @@ func ThreeDistance(x1, x2, y1, y2, z1, z2 float64) float64 {
 }
 
 /*
-width is x plane
-depth is y plane
-height is z plane
+GenHalfCubeOBJ generates a TSIG and OBJ for a cube with no front panel.
+The dimensions are as so:
+
+  - Width is the x plane
+
+  - Depth is the y plane
+
+  - Height is the z plane
+
+    Errors will be returned if the tiles do not fit exactly into the dimensions. E.g. a tile width of 1 is given and the cube has a width of 3.5
 */
 func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64, dx, dy float64) error {
 
 	// check the dimensions
-	if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
-		return fmt.Errorf("cubewidth of %v does", CubeWidth)
+	err := halfCubeFence(tileHeight, tileWidth, CubeWidth, CubeHeight, CubeDepth)
+
+	if err != nil {
+		return err
 	}
 
-	if int(math.Ceil(CubeHeight/tileHeight)) != int(CubeHeight/tileHeight) {
-		return fmt.Errorf("tile height of %v is not an integer multiple of a cube height of %v", tileHeight, CubeHeight)
-	}
-
-	// start at 0,0
+	// get the dimensions of the flat display.
 	pixelWidth := (CubeWidth + CubeDepth*2) * dx
 	pixelHeight := (CubeDepth*2 + CubeHeight) * dy
 
 	// count of tiles in each segment of cube
 	leftRight := int((CubeDepth * 2 / tileWidth) * (CubeHeight / tileHeight))
-	boots := int((CubeDepth * 2 / tileWidth) * (CubeWidth / tileHeight))
+	topbot := int((CubeDepth * 2 / tileWidth) * (CubeWidth / tileHeight))
 	back := int((CubeHeight / tileHeight) * (CubeWidth / tileWidth))
 
-	tiles := make([]Tilelayout, leftRight+boots+back)
+	tiles := make([]Tilelayout, leftRight+topbot+back)
 
 	// calculate the uv map steps in each direction
 
@@ -103,10 +108,11 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 	vStep := tileHeight / (CubeDepth*2 + CubeHeight)
 
 	// plane keeps the information for
-	// each plane of the cube that is created
+	// each plane of the cube that is created.
+	// This is to try to create a more efficient loop
 	type plane struct {
 		// Tile step values
-		iEnd, jEnd     float64
+		iEnd, jEnd     float64 // i and j are substitutes for the 2 dimensions
 		iStep, jStep   float64
 		iStart, jStart float64
 		// UV map values
@@ -120,6 +126,7 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 		inverse bool
 	}
 
+	// set all the planes of the cube
 	planes := []plane{
 		// left wall
 		{iEnd: CubeDepth, jEnd: CubeHeight, iStep: tileWidth, jStep: tileHeight, planeConst: 0, plane: "y", vStart: (CubeDepth / tileHeight) * vStep, inverse: true, uStart: ((CubeDepth + CubeWidth) / tileWidth) * uStep},
@@ -130,23 +137,25 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 		{iEnd: CubeWidth, jEnd: CubeHeight, iStep: tileWidth, jStep: tileHeight, planeConst: CubeDepth, plane: "x", vStart: (CubeDepth / tileHeight) * vStep, uStart: ((CubeDepth) / tileWidth) * uStep},
 
 		// Top
-		{iEnd: CubeDepth, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, planeConst: CubeHeight, plane: "z", vStart: ((CubeDepth + CubeHeight) / tileHeight) * vStep, uStart: ((CubeDepth) / tileWidth) * uStep},
+		{iEnd: CubeDepth, inverse: true, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, planeConst: CubeHeight, plane: "z", vStart: ((CubeDepth + CubeHeight) / tileHeight) * vStep, uStart: ((CubeDepth) / tileWidth) * uStep},
 
 		// Bottom
 		{iEnd: CubeDepth, jEnd: CubeWidth, iStep: tileWidth, jStep: tileHeight, planeConst: 0, plane: "z", uStart: ((CubeDepth) / tileWidth) * uStep},
 	}
 
-	// count the vertexes per face
-	count := 1
-	tCount := 0
+	// vertexCount the vertexes per face
+	vertexCount := 1
+	tileCount := 0
 
 	for _, p := range planes {
 
+		// get the end points of the u and v traversing
 		uTotal := (p.iEnd - p.iStart) / p.iStep
 		width := uTotal * uStep
 
-		ujTotal := (p.jEnd - p.jStart) / p.iStep
+		ujTotal := (p.jEnd - p.jStart) / p.jStep
 		ujwidth := ujTotal * uStep
+
 		iCount := 0
 		for i := p.iStart; i < p.iEnd; i += p.iStep {
 
@@ -156,19 +165,23 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 				switch p.plane {
 				case "x":
 
+					// do vertex coordinates
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)))
 
+					// do texture coordinates
 					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
 					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
 					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
 					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
 
-					tiles[tCount] = Tilelayout{Layout: Positions{Flat: XY{X: int((p.uStart + width - float64(iCount)*uStep) * pixelWidth), Y: int((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+					tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(dx), Y: int(dy)}}}
 
 				case "y":
+
+					// do vertex coordinates
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)))
@@ -189,7 +202,7 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
 					}
 
-					tiles[tCount] = Tilelayout{Layout: Positions{Flat: XY{X: int((p.uStart + width - float64(iCount)*uStep) * pixelWidth), Y: int((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+					tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(dx), Y: int(dy)}}}
 
 				case "z":
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)))
@@ -197,21 +210,33 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)))
 					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)))
 
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
+					if p.inverse {
+						// write the uv map from the top down instead of the bottom up
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)))
 
-					tiles[tCount] = Tilelayout{Layout: Positions{Flat: XY{X: int((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth), Y: int((1 - (p.vStart + float64(iCount+1)*vStep)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+						tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + (uTotal-float64(iCount))*vStep)) * pixelHeight))}, Size: XY{X: int(dx), Y: int(dy)}}}
+					} else {
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
+						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
+
+						tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(iCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(dx), Y: int(dy)}}}
+					}
 
 				default:
+					// continue without writing for default plans
 					continue
 				}
 
-				wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
-				count += 4
+				// write the face after each tile
+				wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+				vertexCount += 4
 				jCount++
-				tCount++
+				tileCount++
 			}
 			iCount++
 		}
@@ -226,28 +251,54 @@ func GenHalfCubeOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float
 
 }
 
-// Angle in radians
+func halfCubeFence(tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64) error {
+
+	// check the dimensions
+	if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
+		return fmt.Errorf("tile width of %v is not an integer multiple of a cube width of %v", tileWidth, CubeWidth)
+	}
+
+	if int(math.Ceil(CubeHeight/tileHeight)) != int(CubeHeight/tileHeight) {
+		return fmt.Errorf("tile height of %v is not an integer multiple of a cube height of %v", tileHeight, CubeHeight)
+	}
+
+	if int(math.Ceil(CubeDepth/tileWidth)) != int(CubeDepth/tileWidth) {
+		return fmt.Errorf("tile width of %v is not an integer multiple of a cube depth of %v", tileWidth, CubeDepth)
+	}
+
+	if int(math.Ceil(CubeDepth/tileHeight)) != int(CubeDepth/tileHeight) {
+		return fmt.Errorf("tile height of %v is not an integer multiple of a cube depth of %v", tileHeight, CubeHeight)
+	}
+
+	return nil
+}
+
+/*
+GenCurveOBJ generates a TSIG and OBJ for a curved cylindrical wall.
+The wall is centred around 0,0,0
+
+Angles are in **Radians**
+*/
 func GenCurveOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float64, cylinderRadius, cylinderHeight, azimuthMaxAngle float64, dx, dy float64) {
-	// r phi z
 
 	// get the total angle covered by the cylinder.
 	azimuthInc := (2 * math.Asin(tileWidth/(2*cylinderRadius)))
 
 	z := 0.0
-	count := 1
+	vertexCount := 1
 	azimuth := -azimuthMaxAngle
 
 	pixelWidth := math.Ceil(2*azimuthMaxAngle/azimuthInc) * dx
 	pixelHeight := math.Ceil(cylinderHeight/tileHeight) * dy
 
-	// rows * column
+	// rows * column for the total expected tile count
 	tiles := make([]Tilelayout, int(math.Ceil(2*azimuthMaxAngle/azimuthInc)*math.Ceil(cylinderHeight/tileHeight)))
 
 	uWidth := 1 / (math.Ceil(2 * azimuthMaxAngle / azimuthInc))
 	vheight := 1 / math.Ceil(cylinderHeight/tileHeight)
 	v := 0.0
 
-	i := 0
+	tielCount := 0
 	for z < cylinderHeight {
 		u := 1.0
 
@@ -272,15 +323,15 @@ func GenCurveOBJ(wObj io.Writer, wTsig io.Writer, tileHeight, tileWidth float64,
 			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
 			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v+vheight)))
 
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3)))
+			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
 
 			azimuth += azimuthInc
 			u -= uWidth
-			count += 4
+			vertexCount += 4
 
-			tiles[i] = Tilelayout{Layout: Positions{Flat: XY{X: int(u * pixelWidth), Y: int((1 - (v + vheight)) * pixelHeight)}, Size: XY{X: int(dx), Y: int(dy)}}}
+			tiles[tielCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round(u * pixelWidth)), Y: int(math.Round((1 - (v + vheight)) * pixelHeight))}, Size: XY{X: int(dx), Y: int(dy)}}}
 
-			i++
+			tielCount++
 		}
 
 		// increase the z height

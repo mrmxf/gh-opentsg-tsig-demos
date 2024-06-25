@@ -12,7 +12,15 @@ Available display shapes are
 
 ## Getting started
 
-Talk about OpenTSG and TSIGs here
+Make sure you are familiar with OpenTSG and TSIGs.
+
+In short TSIGs allow you to generate test patterns for 3d objects,
+with pixel accurate mapping.
+
+This repo is designed to produce an obj and a
+TSIG at the same time, with the intention of
+allowing you to view the test pattern on the obj,
+that was produced by the TPIG.
 
 ## Installation
 
@@ -27,14 +35,14 @@ go build
 ## Running the program
 
 Here's a list of
-the demos for the 
+the demos for the
 different shaped objects
 
 - [Cube](#cube-demo)
 - [Curve](#curve-demo)
 - [Sphere](#sphere-demo)
 
-Once a demo has been run plug it into openTSG
+Once a demo has been run plug it into openTSG.
 
 ### Cube Demo
 
