@@ -176,6 +176,8 @@ func (c Cube) generate(wObj, wTsig io.Writer) error {
 		ujwidth := ujTotal * uStep
 
 		iCount := 0
+		tileFace := ""
+
 		for i := p.iStart; i < p.iEnd; i += p.iStep {
 
 			jCount := 0
@@ -185,63 +187,63 @@ func (c Cube) generate(wObj, wTsig io.Writer) error {
 				case "x":
 
 					// do vertex coordinates
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)))
+					tileFace += fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j)
+					tileFace += fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j)
+					tileFace += fmt.Sprintf("v %v %v %v \n", p.planeConst, i+p.iStep, j+p.jStep)
+					tileFace += fmt.Sprintf("v %v %v %v \n", p.planeConst, i, j+p.jStep)
 
 					// do texture coordinates
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)
+					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)
+					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
+					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
 
 					tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
 				case "y":
 
 					// do vertex coordinates
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j+p.jStep)))
+					tileFace += fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i+p.iStep, p.planeConst, j+p.jStep)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i, p.planeConst, j+p.jStep)
 
 					// if inversed change the direction of the uv map
 					if p.inverse {
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
 
 					} else {
 
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)))
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
 					}
 
 					tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
 				case "z":
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i, j, p.planeConst)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)))
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)))
+					tileFace += fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i, j, p.planeConst)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i+p.iStep, j, p.planeConst)
+					tileFace += fmt.Sprintf("v %v %v %v \n", i+p.iStep, j+p.jStep, p.planeConst)
 
 					if p.inverse {
 						// write the uv map from the top down instead of the bottom up
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)))
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount))*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)
 
 						tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + (uTotal-float64(iCount))*vStep)) * pixelHeight))}, Size: XY{X: int(c.Dx), Y: int(c.Dy)}}}
 					} else {
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)))
-						wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)))
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)
+						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)
 
 						tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(iCount+1)*vStep)) * pixelHeight))}, Size: XY{X: int(c.Dx), Y: int(c.Dy)}}}
 					}
@@ -252,12 +254,17 @@ func (c Cube) generate(wObj, wTsig io.Writer) error {
 				}
 
 				// write the face after each tile
-				wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+				tileFace += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 				vertexCount += 4
 				jCount++
 				tileCount++
 			}
 			iCount++
+		}
+
+		_, err := wObj.Write([]byte(tileFace))
+		if err != nil {
+			return fmt.Errorf("error writing to obj %v", err)
 		}
 	}
 
@@ -321,28 +328,29 @@ func (c Curve) generate(wObj, wTsig io.Writer) error {
 	for z < c.CurveHeight {
 		u := 1.0
 
+		tileFaces := ""
 		for azimuth <= c.AzimuthMaxAngle {
 			//	tileCount++
 
 			// get angle change
 
 			x1, y1, z1 := CylindricalToCartesian(c.CurveRadius, z, azimuth)
-			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v)))
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x1, y1, z1)
+			tileFaces += fmt.Sprintf("vt %v %v \n", u, v)
 
 			x2, y2, z2 := CylindricalToCartesian(c.CurveRadius, z, azimuth+azimuthInc) // increase azimuth
-			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v)))
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x2, y2, z2)
+			tileFaces += fmt.Sprintf("vt %v %v \n", u-uWidth, v)
 
 			x3, y3, z3 := CylindricalToCartesian(c.CurveRadius, z+c.TileHeight, azimuth+azimuthInc) // increase azimuth and height
-			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u-uWidth, v+vheight)))
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x3, y3, z3)
+			tileFaces += fmt.Sprintf("vt %v %v \n", u-uWidth, v+vheight)
 
 			x4, y4, z4 := CylindricalToCartesian(c.CurveRadius, z+c.TileHeight, azimuth) // increase height
-			wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-			wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", u, v+vheight)))
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x4, y4, z4)
+			tileFaces += fmt.Sprintf("vt %v %v \n", u, v+vheight)
 
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 
 			azimuth += azimuthInc
 			u -= uWidth
@@ -351,6 +359,11 @@ func (c Curve) generate(wObj, wTsig io.Writer) error {
 			tiles[tileCount] = Tilelayout{Layout: Positions{Flat: XY{X: int(math.Round(u * pixelWidth)), Y: int(math.Round((1 - (v + vheight)) * pixelHeight))}, Size: XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
 			tileCount++
+		}
+
+		_, err := wObj.Write([]byte(tileFaces))
+		if err != nil {
+			return fmt.Errorf("error writing to obj %v", err)
 		}
 
 		// increase the z height
@@ -468,7 +481,6 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 
 		// find the difference in pixels
 		shift := int((futDif)/(s.TileWidth/s.Dx)) / 2
-		ushift := (float64(shift)) * (1.0 / float64(maxX))
 
 		//fmt.Println(futDif, 2*sphereRadius*(math.Sin((azimuthIncTop-azimuthInc)/2)*math.Sin(theta)), shift)
 		radialInc := 0
@@ -491,94 +503,75 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 			// for each drop of a pixel shift that row along one
 			// to that the uv map that is created is square and can be made a tsig.
 			// @TODO update so each drop is two pixels and is a pixel eitherway
-			if shift > 0 {
-				step := int(s.Dy / float64((shift)+1))
-				botX, botY, botZ := x1, y1, z1
-				botRX, botRY, botRZ := x2, y2, z2
 
-				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
-				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
+			step := int(s.Dy / float64((shift)+1))
+			botX, botY, botZ := x1, y1, z1
+			botRX, botRY, botRZ := x2, y2, z2
 
-				//	vstep := float64(step) * (1.0 / float64(maxY))
-				vstep := float64(step) / maxY //(vheight / float64(shift+1))
-				ustep := (1.0 / float64(maxX))
+			leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
+			rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
 
-				for i := 0; i < shift; i++ {
+			//	vstep := float64(step) * (1.0 / float64(maxY))
+			vstep := float64(step) / maxY //(vheight / float64(shift+1))
+			ustep := (1.0 / float64(maxX))
 
-					//	fmt.Println(x1, y1, x2, z2)
+			tileFaces := ""
+			for i := 0; i < shift; i++ {
 
-					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
-					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
-					pos := shift - i
-					offset := float64((pos))*ustep + float64(radialInc*pos)*ustep
+				//	fmt.Println(x1, y1, x2, z2)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v\n", botX, botY, botZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i)*vstep))))
+				topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
+				topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
+				pos := shift - i
+				offset := float64((pos))*ustep + float64(radialInc*pos)*ustep
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot+offset), v+(float64(i)*vstep))))
+				tileFaces += fmt.Sprintf("v %v %v %v\n", botX, botY, botZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i)*vstep))
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot+offset), v+(float64(i+1)*vstep))))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot+offset), v+(float64(i)*vstep))
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i+1)*vstep))))
-					wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot+offset), v+(float64(i+1)*vstep))
 
-					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uBot + uTileWidth + offset)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
-						Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
-
-					botX, botY, botZ = topX, topY, topZ
-					botRX, botRY, botRZ = topRX, topRY, topRZ
-					vertexCount += 4
-				}
-
-				// the max v picks off from the last one to accoount for rounding errors
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+(vstep*(float64(shift))))))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot), v+(vstep*(float64(shift))))))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot), v+vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vTileHeight)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot+offset), v+(float64(i+1)*vstep))
+				tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 
 				tiles = append(tiles, Tilelayout{Layout: Positions{
-					Flat: XY{X: int((1 - (uBot + uTileWidth)) * maxX), Y: int(math.Round((1 - (v + vTileHeight)) * maxY))},
-					Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+					Flat: XY{X: int((1 - (uBot + uTileWidth + offset)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
+					Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
 
-				// radialInc++
-			} else {
-
-				// get angle change
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v #bottom left\n", x1, y1, z1)))
-				// increase azimuth
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v # bottom right\n", x2, y2, z2)))
-				// nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+ushift), v)))            // x1
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+uTileWidth+ushift), v))) //x2
-				//w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v)))        // x1
-				//	w.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uWidth), v))) //x2
-
-				// increase azimuth and height
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uTileWidth), v+vTileHeight)))
-
-				// increase height
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v+vTileHeight)))
-
-				tiles = append(tiles, Tilelayout{Layout: Positions{
-					Flat: XY{X: int((1 - (uBot + ushift)) * maxX), Y: int((1 - (v + vTileHeight)) * maxY)},
-					Size: XY{X: int(s.Dx), Y: int(s.Dy)}}})
-
+				botX, botY, botZ = topX, topY, topZ
+				botRX, botRY, botRZ = topRX, topRY, topRZ
+				vertexCount += 4
 			}
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+
+			// the max v picks off from the last one to accoount for rounding errors
+			tileFaces += fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot), v+(vstep*(float64(shift))))
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot), v+(vstep*(float64(shift))))
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x3, y3, z3)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTileWidth+uBot), v+vTileHeight)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x4, y4, z4)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vTileHeight)
+
+			tiles = append(tiles, Tilelayout{Layout: Positions{
+				Flat: XY{X: int((1 - (uBot + uTileWidth)) * maxX), Y: int(math.Round((1 - (v + vTileHeight)) * maxY))},
+				Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+
+			// radialInc++
+
+			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
+
+			_, err := wObj.Write([]byte(tileFaces))
+			if err != nil {
+				return fmt.Errorf("error writing to obj %v", err)
+			}
 
 			// nlX, nlY, nlZ := PolarToCartesian(sphereRadius, topLeftThet+thetaInc, topLeftAz+azimuthIncTop)
 
@@ -606,88 +599,72 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 			x3, y3, z3 := PolarToCartesian(s.Radius, topLeftThet, topRightAz-azimuthIncTop)
 			x4, y4, z4 := PolarToCartesian(s.Radius, topLeftThet, topRightAz)
 
-			if shift > 0 {
-				step := int(s.Dy / float64(shift+1))
-				botX, botY, botZ := x1, y1, z1
-				botRX, botRY, botRZ := x2, y2, z2
+			step := int(s.Dy / float64(shift+1))
+			botX, botY, botZ := x1, y1, z1
+			botRX, botRY, botRZ := x2, y2, z2
 
-				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
-				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
+			leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
+			rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
 
-				//	vstep := float64(step) * (1.0 / float64(maxY))
-				vstep := float64(step) / maxY //(vheight / float64(shift+1))
-				ustep := (1.0 / float64(maxX))
+			//	vstep := float64(step) * (1.0 / float64(maxY))
+			vstep := float64(step) / maxY //(vheight / float64(shift+1))
+			ustep := (1.0 / float64(maxX))
+			tileFaces := ""
+			for i := 0; i < shift; i++ {
 
-				for i := 0; i < shift; i++ {
+				//	fmt.Println(x1, y1, x2, z2)
+				//////////////TARGET//////////////
 
-					//	fmt.Println(x1, y1, x2, z2)
-					//////////////TARGET//////////////
+				topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
+				topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
+				pos := shift - i
+				stepOffset := -float64((pos))*ustep - float64(radialInc*pos)*ustep
 
-					topX, topY, topZ := botX+leftVectX, botY+leftVectY, botZ+leftVectZ
-					topRX, topRY, topRZ := botRX+rightVectX, botRY+rightVectY, botRZ+rightVectZ
-					pos := shift - i
-					stepOffset := -float64((pos))*ustep - float64(radialInc*pos)*ustep
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot+stepOffset), v+(float64(i)*vstep))
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+stepOffset), v+(float64(i)*vstep))))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot+stepOffset), v+(float64(i)*vstep))
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot+stepOffset), v+(float64(i)*vstep))))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot+stepOffset), v+(float64(i+1)*vstep))
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot+stepOffset), v+(float64(i+1)*vstep))))
-
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot+stepOffset), v+(float64(i+1)*vstep))))
-					wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
-
-					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uBot + stepOffset)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
-						Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
-
-					botX, botY, botZ = topX, topY, topZ
-					botRX, botRY, botRZ = topRX, topRY, topRZ
-					vertexCount += 4
-				}
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+(vstep*(float64(shift))))))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot), v+(vstep*(float64(shift))))))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot), v+vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vTileHeight)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot+stepOffset), v+(float64(i+1)*vstep))
+				tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 
 				tiles = append(tiles, Tilelayout{Layout: Positions{
-					Flat: XY{X: int((1 - uBot) * maxX), Y: int(math.Round((1 - (v + vTileHeight)) * maxY))},
-					Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+					Flat: XY{X: int((1 - (uBot + stepOffset)) * maxX), Y: int(math.Round((1 - (v + (float64(i+1) * vstep))) * maxY))},
+					Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
 
-				// radialInc++
-			} else {
-				//	tileCount++
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-ushift), v)))
-
-				// increase azimuth
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uBot-uTileWidth-ushift), v)))
-
-				// increase azimuth and height
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u-uTileWidth), v+vTileHeight)))
-
-				// increase height
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-u, v+vTileHeight)))
+				botX, botY, botZ = topX, topY, topZ
+				botRX, botRY, botRZ = topRX, topRY, topRZ
+				vertexCount += 4
 			}
 
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+			// write the final tile, which may be the only one
+			tileFaces += fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot), v+(vstep*(float64(shift))))
 
+			tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot), v+(vstep*(float64(shift))))
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x3, y3, z3)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(-uTileWidth+uBot), v+vTileHeight)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x4, y4, z4)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uBot), v+vTileHeight)
+
+			tiles = append(tiles, Tilelayout{Layout: Positions{
+				Flat: XY{X: int((1 - uBot) * maxX), Y: int(math.Round((1 - (v + vTileHeight)) * maxY))},
+				Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+
+			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
+
+			_, err := wObj.Write([]byte(tileFaces))
+			if err != nil {
+				return fmt.Errorf("error writing to obj %v", err)
+			}
 			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
 			clockAz -= azimuthIncTop
 			topRightAz = clockAz
@@ -724,7 +701,6 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 
 		shift := int((futDif / 2) / (s.TileWidth / s.Dx))
 
-		ushift := float64(shift) * (1.0 / float64(maxX))
 		radialInc := 0
 
 		for azimuth < s.ThetaMaxAngle {
@@ -734,94 +710,71 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 			x2, y2, z2 := PolarToCartesian(s.Radius, botLeftThet-thetaInc, botLeftAz+azimuthInc) // increase azimuth
 			x3, y3, z3 := PolarToCartesian(s.Radius, botLeftThet, botLeftAz+azimuthIncBot)       // increase azimuth and height
 			x4, y4, z4 := PolarToCartesian(s.Radius, botLeftThet, botLeftAz)                     // increase height
-			if shift > 0 {
-				step := int(s.Dy / float64(shift+1))
-				topX, topY, topZ := x1, y1, z1
-				topRX, topRY, topRZ := x2, y2, z2
 
-				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
-				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
+			step := int(s.Dy / float64(shift+1))
+			topX, topY, topZ := x1, y1, z1
+			topRX, topRY, topRZ := x2, y2, z2
 
-				//	vstep := float64(step) * (1.0 / float64(maxY))
-				vstep := float64(step) / maxY // (vheight / float64(shift+1))
-				ustep := (1.0 / float64(maxX))
+			leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
+			rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
 
-				for i := 0; i < shift; i++ {
+			//	vstep := float64(step) * (1.0 / float64(maxY))
+			vstep := float64(step) / maxY // (vheight / float64(shift+1))
+			ustep := (1.0 / float64(maxX))
 
-					botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
-					botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
-					pos := shift - i
+			tileFaces := ""
+			for i := 0; i < shift; i++ {
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
+				botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
+				botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
+				pos := shift - i
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
-					wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)
 
-					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uTop + uTileWidth + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
-						Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
-
-					topX, topY, topZ = botX, botY, botZ
-					topRX, topRY, topRZ = botRX, botRY, botRZ
-					vertexCount += 4
-				}
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift)*vstep)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth), v-float64(shift)*vstep)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth), v-vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vTileHeight)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)
+				tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 
 				tiles = append(tiles, Tilelayout{Layout: Positions{
-					Flat: XY{X: int((1 - (uTop + uTileWidth)) * maxX), Y: int(math.Round((1 - (v - float64(shift)*vstep)) * maxY))},
-					Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+					Flat: XY{X: int((1 - (uTop + uTileWidth + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
+					Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
 
-				//	leftVectX, leftVectY, leftVectZ := (x4-x1)/dy, (y4-y1)/dy, (z4-z1)/dy
-				//	rightVectX, rightVectY, rightVectZ := (x3-x2)/dy, (y3-y2)/dy, (z3-z2)/dy
-				/*
-
-						handle the u differently
-
-						numberOfShifs := shift
-
-					// +1 to rember the 0th line and get the correct amount of increments
-					fmt.Println("step", shift+1, thetaInc, int(dy/float64(shift+1)))
-				*/
-
-				// print the length difference along the
-			} else {
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+ushift), v)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth+ushift), v)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u+uTileWidth), v-vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(u), v-vTileHeight)))
-
+				topX, topY, topZ = botX, botY, botZ
+				topRX, topRY, topRZ = botRX, botRY, botRZ
+				vertexCount += 4
 			}
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift)*vstep)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth), v-float64(shift)*vstep)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x3, y3, z3)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+uTileWidth), v-vTileHeight)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x4, y4, z4)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vTileHeight)
+
+			tiles = append(tiles, Tilelayout{Layout: Positions{
+				Flat: XY{X: int((1 - (uTop + uTileWidth)) * maxX), Y: int(math.Round((1 - (v - float64(shift)*vstep)) * maxY))},
+				Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
 
 			//	fmt.Println(math.Sqrt(math.Pow((x2)-x1, 2)+math.Pow((y2)-y1, 2)) + math.Pow((z2)-z1, 2))
 
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
+			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
+
+			_, err := wObj.Write([]byte(tileFaces))
+			if err != nil {
+				return fmt.Errorf("error writing to obj %v", err)
+			}
 
 			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
 			azimuth += azimuthIncBot
@@ -846,93 +799,79 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 			x3, y3, z3 := PolarToCartesian(s.Radius, botLeftThet, botRightAz-azimuthIncTop)       // increase azimuth and height
 			x4, y4, z4 := PolarToCartesian(s.Radius, botLeftThet, botRightAz)                     // increase height to the bottom
 
-			if shift > 0 {
-				step := int(s.Dy / float64(shift+1))
-				topX, topY, topZ := x1, y1, z1
-				topRX, topRY, topRZ := x2, y2, z2
+			step := int(s.Dy / float64(shift+1))
+			topX, topY, topZ := x1, y1, z1
+			topRX, topRY, topRZ := x2, y2, z2
 
-				leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
-				rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
+			leftVectX, leftVectY, leftVectZ := (float64(step)*(x4-x1))/s.Dy, (float64(step)*(y4-y1))/s.Dy, (float64(step)*(z4-z1))/s.Dy
+			rightVectX, rightVectY, rightVectZ := (float64(step)*(x3-x2))/s.Dy, (float64(step)*(y3-y2))/s.Dy, (float64(step)*(z3-z2))/s.Dy
 
-				//	vstep := float64(step) * (1.0 / float64(maxY))
-				vstep := float64(step) / maxY // (vheight / float64(shift+1))
-				ustep := (-1.0 / float64(maxX))
+			//	vstep := float64(step) * (1.0 / float64(maxY))
+			vstep := float64(step) / maxY // (vheight / float64(shift+1))
+			ustep := (-1.0 / float64(maxX))
 
-				//fmt.Println("start")
-				for i := 0; i < shift; i++ {
+			tileFaces := ""
+			for i := 0; i < shift; i++ {
 
-					//	fmt.Println(x1, y1, x2, z2)
+				//	fmt.Println(x1, y1, x2, z2)
 
-					botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
-					botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
-					pos := shift - i
+				botX, botY, botZ := topX+leftVectX, topY+leftVectY, topZ+leftVectZ
+				botRX, botRY, botRZ := topRX+rightVectX, topRY+rightVectY, topRZ+rightVectZ
+				pos := shift - i
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i)*vstep)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botRX, botRY, botRZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)
 
-					wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)))
-					wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)))
-					wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
-
-					tiles = append(tiles, Tilelayout{Layout: Positions{
-						Flat: XY{X: int((1 - (uTop + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
-						Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
-
-					topX, topY, topZ = botX, botY, botZ
-					topRX, topRY, topRZ = botRX, botRY, botRZ
-					vertexCount += 4
-				}
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift)*vstep)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth), v-float64(shift)*vstep)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth), v-vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vTileHeight)))
+				tileFaces += fmt.Sprintf("v %v %v %v \n", botX, botY, botZ)
+				tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop+float64((pos))*ustep+float64(radialInc*pos)*ustep), v-float64(i+1)*vstep)
+				tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
 
 				tiles = append(tiles, Tilelayout{Layout: Positions{
-					Flat: XY{X: int((1 - uTop) * maxX), Y: int(math.Round((1 - (v - float64(shift)*vstep)) * maxY))},
-					Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
-				//	leftVectX, leftVectY, leftVectZ := (x4-x1)/dy, (y4-y1)/dy, (z4-z1)/dy
-				//	rightVectX, rightVectY, rightVectZ := (x3-x2)/dy, (y3-y2)/dy, (z3-z2)/dy
-				/*
+					Flat: XY{X: int((1 - (uTop + float64((pos))*ustep + float64(radialInc*pos)*ustep)) * maxX), Y: int(math.Round((1 - (v - (float64(i) * vstep))) * maxY))},
+					Size: XY{X: int(s.Dx), Y: int(maxY * vstep)}}})
 
-					handle the u differently
-
-					numberOfShifs := shift
-				*/
-				// +1 to rember the 0th line and get the correct amount of increments
-
-			} else {
-				// tileCount++
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x1, y1, z1)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-ushift), v)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x2, y2, z2)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth-ushift), v)))
-
-				// increase azimuth and height
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x3, y3, z3)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth), v-vTileHeight)))
-
-				wObj.Write([]byte(fmt.Sprintf("v %v %v %v \n", x4, y4, z4)))
-				wObj.Write([]byte(fmt.Sprintf("vt %v %v \n", 1-uTop, v-vTileHeight)))
-
+				topX, topY, topZ = botX, botY, botZ
+				topRX, topRY, topRZ = botRX, botRY, botRZ
+				vertexCount += 4
 			}
-			wObj.Write([]byte(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)))
 
+			tileFaces += fmt.Sprintf("v %v %v %v \n", topX, topY, topZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop), v-float64(shift)*vstep)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", topRX, topRY, topRZ)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth), v-float64(shift)*vstep)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x3, y3, z3)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop-uTileWidth), v-vTileHeight)
+
+			tileFaces += fmt.Sprintf("v %v %v %v \n", x4, y4, z4)
+			tileFaces += fmt.Sprintf("vt %v %v \n", 1-(uTop), v-vTileHeight)
+
+			tiles = append(tiles, Tilelayout{Layout: Positions{
+				Flat: XY{X: int((1 - uTop) * maxX), Y: int(math.Round((1 - (v - float64(shift)*vstep)) * maxY))},
+				Size: XY{X: int(s.Dx), Y: int(math.Round(maxY * (vTileHeight - vstep*(float64(shift)))))}}})
+			//	leftVectX, leftVectY, leftVectZ := (x4-x1)/dy, (y4-y1)/dy, (z4-z1)/dy
+			//	rightVectX, rightVectY, rightVectZ := (x3-x2)/dy, (y3-y2)/dy, (z3-z2)/dy
+			/*
+
+				handle the u differently
+
+				numberOfShifs := shift
+			*/
+			// +1 to rember the 0th line and get the correct amount of increments
+
+			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)
+
+			_, err := wObj.Write([]byte(tileFaces))
+			if err != nil {
+				return fmt.Errorf("error writing to obj %v", err)
+			}
 			//	objbuf.WriteString(fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", count, count, count+1, count+1, count+2, count+2, count+3, count+3))
 			clockAz -= azimuthIncTop
 			botRightAz = clockAz
