@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
 
@@ -50,6 +51,7 @@ func init() {
 // Generator is for writing to objs and tsigs
 type Generator interface {
 	generate(wObj io.Writer, wTsig io.Writer) error
+	objType() string
 }
 
 // Gen shape is a generic function creator for handling generator objects.
@@ -75,7 +77,13 @@ func GenShape[gen Generator]() func(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		return genny.generate(fObj, fTSIG)
+		err = genny.generate(fObj, fTSIG)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Generated %v object\n", genny.objType())
+		return nil
 	}
 }
 
@@ -88,6 +96,10 @@ type Sphere struct {
 	AzimuthMaxAngle float64 `json:"azimuthMaxAngle" yaml:"azimuthMaxAngle"`
 	Dx              float64 `json:"dx" yaml:"dx"`
 	Dy              float64 `json:"dy" yaml:"dy"`
+}
+
+func (s Sphere) objType() string {
+	return "sphere"
 }
 
 var cmdSphere = &cobra.Command{
@@ -110,6 +122,10 @@ type Cube struct {
 	Dy         float64 `json:"dy" yaml:"dy"`
 }
 
+func (c Cube) objType() string {
+	return "cube"
+}
+
 var cmdCube = &cobra.Command{
 	Use:   "cube",
 	Short: "A 3d cube",
@@ -128,6 +144,10 @@ type Curve struct {
 	AzimuthMaxAngle float64 `json:"azimuthMaxAngle" yaml:"azimuthMaxAngle"`
 	Dx              float64 `json:"dx" yaml:"dx"`
 	Dy              float64 `json:"dy" yaml:"dy"`
+}
+
+func (c Curve) objType() string {
+	return "curve"
 }
 
 var cmdCurve = &cobra.Command{
