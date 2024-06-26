@@ -1,9 +1,6 @@
 package main
 
 import (
-	"io"
-	"math"
-	"os"
 	"testing"
 	//	. "github.com/smartystreets/goconvey/convey"
 )
@@ -18,14 +15,14 @@ func TestGetReg(t *testing.T) {
 
 	*/
 
-	maxAngle := 30.0
-	maxTheta := (math.Pi / 180) * maxAngle
+	/*	maxAngle := 30.0
+		maxTheta := (math.Pi / 180) * maxAngle
 
-	out, _ := os.Create("./testdata/test1.obj")
-	Sphere{0.1, 0.1, 10, maxTheta, maxTheta, 100, 100}.generate(out, io.Discard)
+		out, _ := os.Create("./testdata/test1.obj")
+		Sphere{0.1, 0.1, 10, maxTheta, maxTheta, 100, 100}.generate(out, io.Discard)
 
-	out, _ = os.Create("./testdata/test2.obj")
-	Sphere{0.5, 0.5, 5, maxTheta, maxTheta, 500, 500}.generate(out, io.Discard)
+		out, _ = os.Create("./testdata/test2.obj")
+		Sphere{0.5, 0.5, 5, maxTheta, maxTheta, 500, 500}.generate(out, io.Discard)*/
 
 	/*
 		Convey("Checking the "+path+" call returns the list of values", t, func() {

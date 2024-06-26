@@ -1,0 +1,12 @@
+# made with the real world tiles in mind of
+# https://www.planar.com/products/lcd-video-walls/mosaic/mosaic-specifications/
+tileHeight: 0.3874
+tileWidth: 0.3874
+radius: 3.8
+
+#Angles are in radians
+thetaMaxAngle: 0.5235987755982988
+azimuthMaxAngle: 0.5235987755982988
+# pixel change per tile
+dx: 960
+dy: 960

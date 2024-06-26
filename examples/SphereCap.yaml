@@ -1,5 +1,6 @@
 tileHeight: 0.5
 tileWidth: 0.5
+
 radius: 5
 thetaMaxAngle: 0.5235987755982988
 azimuthMaxAngle: 0.5235987755982988

@@ -91,10 +91,10 @@ congratulations you've now made your first obj and TSIG.
 ./generator curve --conf ./examples/curve.yaml --outputFile ./examples/curve
 ```
 
-### Sphere Demo
+### SphereCap Demo
 
 ```cmd
-./generator sphere--conf ./examples/sphere.yaml --outputFile ./examples/sphere
+./generator spherecap --conf ./examples/sphere.yaml --outputFile ./examples/sphere
 ```
 
 ## Golden ratios

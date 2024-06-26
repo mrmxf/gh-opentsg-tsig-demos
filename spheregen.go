@@ -1,93 +1,90 @@
 package main
 
-import (
-	"fmt"
-	"io"
-	"math"
-
-	"encoding/json"
-)
-
+/*
 func main() {
 
-	/*
-		maxAngle := 30.0
-		maxTheta := (math.Pi / 180) * maxAngle
-		fcu, _ := os.Create("./examples/Sphere.yaml")
-		o, _ := yaml.Marshal(Sphere{0.5, 0.5, 5, maxTheta, maxTheta, 500, 500})
-		fcu.Write(o)*/
-
-	err := cmdObj.Execute()
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	/*
-		f, _ := os.Create("out/realTiles.obj")
-		maxAngle := 30.0
-		maxTheta := (math.Pi / 180) * maxAngle
-
-		GenSphereOBJ(f, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
-
-		fs, _ := os.Create("out/realTilesSmall.obj")
-		fst, _ := os.Create("out/realTilesSmall.json")
-
-		GenSphereOBJSquare(fs, fst, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
-		//ObjToTsig("out/realTiles.obj", 100, 100) 6000,6000
-		//sphere()
-
-		fc, _ := os.Create("out/realTilesCurve.obj")
-		fct, _ := os.Create("out/realTilesCurve.json")
-		GenCurveOBJ(fc, fct, 0.5, 0.5, 5, 5, maxTheta, 500, 500)
-
-		fcu, _ := os.Create("./examples/cube.yaml")
-		o, _ := yaml.Marshal(Cube{0.5, 0.5, 5, 5, 2.5, 500, 500})
-		fcu.Write(o)
 		/*
-			fcu, _ := os.Create("out/realTilesCube.obj")
-			fcut, _ := os.Create("out/realTilesCube.json")
-			fmt.Println(GenHalfCubeOBJ(fcu, fcut, 0.5, 0.5, 5, 5, 2.5, 500, 500))*/
-}
+			maxAngle := 30.0
+			maxTheta := (math.Pi / 180) * maxAngle
+			fcu, _ := os.Create("./examples/Sphere.yaml")
+			o, _ := yaml.Marshal(Sphere{0.5, 0.5, 5, maxTheta, maxTheta, 500, 500})
+			fcu.Write(o)
+
+		err := cmdObj.Execute()
+
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		/*
+			f, _ := os.Create("out/realTiles.obj")
+			maxAngle := 30.0
+			maxTheta := (math.Pi / 180) * maxAngle
+
+			GenSphereOBJ(f, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
+
+			fs, _ := os.Create("out/realTilesSmall.obj")
+			fst, _ := os.Create("out/realTilesSmall.json")
+
+			GenSphereOBJSquare(fs, fst, 0.5, 0.5, 5, maxTheta, maxTheta, 500, 500)
+			//ObjToTsig("out/realTiles.obj", 100, 100) 6000,6000
+			//sphere()
+
+			fc, _ := os.Create("out/realTilesCurve.obj")
+			fct, _ := os.Create("out/realTilesCurve.json")
+			GenCurveOBJ(fc, fct, 0.5, 0.5, 5, 5, maxTheta, 500, 500)
+
+			fcu, _ := os.Create("./examples/cube.yaml")
+			o, _ := yaml.Marshal(Cube{0.5, 0.5, 5, 5, 2.5, 500, 500})
+			fcu.Write(o)
+			/*
+				fcu, _ := os.Create("out/realTilesCube.obj")
+				fcut, _ := os.Create("out/realTilesCube.json")
+				fmt.Println(GenHalfCubeOBJ(fcu, fcut, 0.5, 0.5, 5, 5, 2.5, 500, 500))
+	}
 
 // make a distance calculator
 // math.Sqrt(math.Pow((z+xinc)-prevX, 2) + math.Pow((z+yinc)-prevY, 2)
 
 // PolarToCartesian takes polar coordinates of R, theta (inclination angle) and
 // phi (Azimuth angle) and converts them to cartesian XYZ
-func PolarToCartesian(r, theta, phi float64) (X, Y, Z float64) {
-	X = r * math.Sin(theta) * math.Cos(phi)
-	Y = r * math.Sin(theta) * math.Sin(phi)
-	Z = r * math.Cos(theta)
-	return
-}
+
+	func PolarToCartesian(r, theta, phi float64) (X, Y, Z float64) {
+		X = r * math.Sin(theta) * math.Cos(phi)
+		Y = r * math.Sin(theta) * math.Sin(phi)
+		Z = r * math.Cos(theta)
+		return
+	}
 
 // PolarToCylindrical takes polar coordinates of R, theta (inclination angle) and
 // phi (Azimuth angle) and converts them to cylindrical  coordinates
 // of R, Z, Phi
-func PolarToCylindrical(r, theta, phi float64) (R, Z, Phi float64) {
-	R = r * math.Sin(theta)
-	Z = r * math.Cos(theta)
-	Phi = phi
 
-	return
-}
+	func PolarToCylindrical(r, theta, phi float64) (R, Z, Phi float64) {
+		R = r * math.Sin(theta)
+		Z = r * math.Cos(theta)
+		Phi = phi
+
+		return
+	}
 
 // CylindricalToCartesian takes polar coordinates of R, theta (inclination angle) and
 // phi (Azimuth angle) and converts them to cylindrical  coordinates
 // of R, Z, Phi
-func CylindricalToCartesian(r, z, azimuth float64) (X, Y, Z float64) {
-	X = r * math.Cos(azimuth)
-	Y = r * math.Sin(azimuth)
-	Z = z
-	return
-}
+
+	func CylindricalToCartesian(r, z, azimuth float64) (X, Y, Z float64) {
+		X = r * math.Cos(azimuth)
+		Y = r * math.Sin(azimuth)
+		Z = z
+		return
+	}
 
 // ThreeDistance calculates the distance between 2 3d points
-func ThreeDistance(x1, x2, y1, y2, z1, z2 float64) float64 {
-	return math.Sqrt(math.Pow((x1)-x2, 2) + math.Pow(y1-y2, 2) + math.Pow(z1-z2, 2))
-}
+
+	func ThreeDistance(x1, x2, y1, y2, z1, z2 float64) float64 {
+		return math.Sqrt(math.Pow((x1)-x2, 2) + math.Pow(y1-y2, 2) + math.Pow(z1-z2, 2))
+	}
 
 /*
 GenHalfCubeOBJ generates a TSIG and OBJ for a cube with no front panel.
@@ -100,7 +97,8 @@ The dimensions are as so:
   - Height is the z plane
 
     Errors will be returned if the tiles do not fit exactly into the dimensions. E.g. a tile width of 1 is given and the cube has a width of 3.5
-*/
+
+*
 func (c Cube) generate(wObj, wTsig io.Writer) error {
 
 	// check the dimensions
@@ -279,32 +277,32 @@ func (c Cube) generate(wObj, wTsig io.Writer) error {
 
 func halfCubeFence(tileHeight, tileWidth float64, CubeWidth, CubeHeight, CubeDepth float64) error {
 
-	// check the dimensions
-	if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
-		return fmt.Errorf("tile width of %v is not an integer multiple of a cube width of %v", tileWidth, CubeWidth)
-	}
+		// check the dimensions
+		if int(math.Ceil(CubeWidth/tileWidth)) != int(CubeWidth/tileWidth) {
+			return fmt.Errorf("tile width of %v is not an integer multiple of a cube width of %v", tileWidth, CubeWidth)
+		}
 
-	if int(math.Ceil(CubeHeight/tileHeight)) != int(CubeHeight/tileHeight) {
-		return fmt.Errorf("tile height of %v is not an integer multiple of a cube height of %v", tileHeight, CubeHeight)
-	}
+		if int(math.Ceil(CubeHeight/tileHeight)) != int(CubeHeight/tileHeight) {
+			return fmt.Errorf("tile height of %v is not an integer multiple of a cube height of %v", tileHeight, CubeHeight)
+		}
 
-	if int(math.Ceil(CubeDepth/tileWidth)) != int(CubeDepth/tileWidth) {
-		return fmt.Errorf("tile width of %v is not an integer multiple of a cube depth of %v", tileWidth, CubeDepth)
-	}
+		if int(math.Ceil(CubeDepth/tileWidth)) != int(CubeDepth/tileWidth) {
+			return fmt.Errorf("tile width of %v is not an integer multiple of a cube depth of %v", tileWidth, CubeDepth)
+		}
 
-	if int(math.Ceil(CubeDepth/tileHeight)) != int(CubeDepth/tileHeight) {
-		return fmt.Errorf("tile height of %v is not an integer multiple of a cube depth of %v", tileHeight, CubeHeight)
-	}
+		if int(math.Ceil(CubeDepth/tileHeight)) != int(CubeDepth/tileHeight) {
+			return fmt.Errorf("tile height of %v is not an integer multiple of a cube depth of %v", tileHeight, CubeHeight)
+		}
 
-	return nil
-}
+		return nil
+	}
 
 /*
 GenCurveOBJ generates a TSIG and OBJ for a curved cylindrical wall.
 The wall is centred around 0,0,0
 
 Angles are in **Radians**
-*/
+
 func (c Curve) generate(wObj, wTsig io.Writer) error {
 
 	// get the total angle covered by the cylinder.
@@ -387,7 +385,7 @@ GenSphereOBJSquare generates a sphere made of tiles of size height and width.
 This works by splitting each row of pixels into their own tile, so the uv map matches exactly.
 
 All angles are in radians
-*/
+
 func (s Sphere) generate(wObj, wTsig io.Writer) error {
 
 	// get the start point
@@ -458,7 +456,7 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 	//sizex := 3840
 	/*
 	   generate the size of the bas eimage then move erveything along
-	*/
+
 	// TOP
 	v := 0.5
 
@@ -493,7 +491,7 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 				so second row goes 1 + 1 + 1
 				row below is 2 + 2 + 2 etc
 				row below is 3 + 3 + 3
-			*/
+
 
 			x1, y1, z1 := PolarToCartesian(s.Radius, topLeftThet+thetaInc, topLeftAz)
 			x2, y2, z2 := PolarToCartesian(s.Radius, topLeftThet+thetaInc, topLeftAz+azimuthInc) // increase azimuth
@@ -863,7 +861,7 @@ func (s Sphere) generate(wObj, wTsig io.Writer) error {
 				handle the u differently
 
 				numberOfShifs := shift
-			*/
+
 			// +1 to rember the 0th line and get the correct amount of increments
 
 			tileFaces += fmt.Sprintf("f %v/%v %v/%v %v/%v %v/%v\n", vertexCount, vertexCount, vertexCount+1, vertexCount+1, vertexCount+2, vertexCount+2, vertexCount+3, vertexCount+3)

@@ -1,13 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"io"
-	"os"
-
-	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-)
+/*
 
 var cmdObj = &cobra.Command{
 	Use:   "",
@@ -24,7 +17,7 @@ var cmdObj = &cobra.Command{
 		Running on whatever port you choose insert the paths available
 		`)
 		return nil
-	},*/
+	},
 }
 
 var (
