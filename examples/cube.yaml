@@ -1,0 +1,10 @@
+# tile dimensions
+tileHeight: 0.5
+tileWidth: 0.5
+# cube dimensions
+cubeWidth: 5
+cubeHeight: 5
+cubeDepth: 2.5
+# Pixels per tile
+dx: 500
+dy: 500

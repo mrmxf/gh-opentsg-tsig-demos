@@ -1,0 +1,13 @@
+# tile dimensions
+tileHeight: 0.5
+tileWidth: 0.5
+# cylinder dimensions
+cylinderRadius: 5
+cylinderHeight: 5
+# Max angle in radians
+# will be 30 degrees either side of the azimuth
+# in this example.
+azimuthMaxAngle: 0.5235987755982988
+# Pixels per tile
+dx: 500
+dy: 500
