@@ -18,7 +18,7 @@ import (
 	"github.com/mrmxf/opentsg-modules/opentsg-core/gridgen"
 )
 
-// add the shape to the mian handler here
+// add the shape to the main handler here
 func init() {
 
 	AddShapeToHandler[Cube]("An open faced cube", "An open faced cube")

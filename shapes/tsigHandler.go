@@ -1,3 +1,8 @@
+//	Copyright ©2019-2024  Mr MXF   info@mrmxf.com
+//	BSD-3-Clause License           https://opensource.org/license/bsd-3-clause/
+//
+// Package shapes contains the obj shapes and their configurations
+
 package shapes
 
 import (
@@ -27,8 +32,9 @@ func init() {
 var shapes = map[string]func([]byte) (Generator, error){}
 
 /*
-Add shape adds a shape of type generator to be handled by the programm.
-To be called during the init stage, before the main program runs.
+AddShapeToHandler adds a shape of type generator to be handled by the program.
+
+Call this function during the init stage, before the main program runs.
 */
 func AddShapeToHandler[gen Generator](ShortDesc, LongDesc string) {
 
@@ -42,6 +48,18 @@ func AddShapeToHandler[gen Generator](ShortDesc, LongDesc string) {
 
 }
 
+// ShapeName is struct designed to be
+// embedded to keep the field name detection constant
+/*
+e.g.
+
+type example struct {
+	field1 string
+	field1 string
+	ShapeName
+}
+
+*/
 type ShapeName struct {
 	Shape string `json:"shape" yaml:"shape"`
 }

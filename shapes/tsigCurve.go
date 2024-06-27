@@ -1,3 +1,8 @@
+//	Copyright ©2019-2024  Mr MXF   info@mrmxf.com
+//	BSD-3-Clause License           https://opensource.org/license/bsd-3-clause/
+//
+// Package shapes contains the obj shapes and their configurations
+
 package shapes
 
 import (
@@ -32,7 +37,7 @@ func (c Curve) ObjType() string {
 GenCurveOBJ generates a TSIG and OBJ for a curved cylindrical wall.
 The wall is centred around 0,0,0
 
-Angles are in **Radians**
+Angles are in Radians
 */
 func (c Curve) Generate(wObj, wTsig io.Writer) error {
 

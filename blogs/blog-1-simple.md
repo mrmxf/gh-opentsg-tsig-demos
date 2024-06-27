@@ -41,7 +41,7 @@ As there are thankfully no angles in this plane.
 The plan was then to iterate the tiles along the circumference, one tile angle at a time.
 We could then generate the corresponding four corner vertexes of the tile and the corresponding UV map.
 The vertexes corners corresponded to min radius + increment, z + tileHeight. The radius is constant throughout.
-These cylindrical coordinates were then converted to cartesian ones.
+These cylindrical coordinates were then converted to cartesian ones with following formulas.
 
 !["Cylindrical to cartesian conversion (copyright wikipedia)"](./cylinder2cart.svg)
 
@@ -52,29 +52,36 @@ The shape you get is based on the order you join the dots, so if it isn't sequen
 The order I settled on for this and all other shapes in the blogs, was
 bottom left, bottom right, top right and then top left in an anti clockwise order. For v1,v2,v3 and v4 respectively
 
-Then when this was done the uv map generated an inverse image,
-so I had to calibrate the uv map to math the viewing experience from the centre of the screen.
+Then when this was done the uv map first generated an inverse image, I had got the horizontal coordinates flipped :\( .
+I had to flip them to calibrate the uv map to math the viewing experience from the centre of the screen.
 
-The uv map was then added, had to have the u coordinates reversed to ensure the image was not reversed from the middle of the cylinder.
-
-insert image of finished article
+!["a complete curve"](./curveview.jpg)
 
 ## Object 2 The cube
 
 The next object to be tackled was an open cube, this is also simpler than a sphere,
-by virtue of no pixel dropping occuring, just like the curved wall.
+by virtue of there being smooth surfaces or difficult shapes to accommodate.
 
 The cube also had the added bonus of being in cartesian coordinates,
 so no nasty angles were required for calculating vertex positions.
-And to make our lives simpler each cube face was designed to only move in 2d where one plane was constant.
-E.g. the back panel is constant in y so when moving tiles along only the x(for width) and z (for height) coordinates were changed
+To make our lives simpler, each cube face calculation was designed to only move in 2d,  where the third plane
+was constant.
+E.g. the back panel of the cube is constant in the direction y, so when moving tiles along,
+only the x(for width) and z (for height) coordinates were changed.
 
-This process was repeated fort the top and bottoms (constant z plane) and side panels (constant x plane)
+This process tile position algorithm was repeated for the top and bottom of the cube (constant z plane)
+and side panels (constant x plane)
 following the anticlockwise motion for assigning vertexes
 described earlier.
 
-Then fought with uv maps so things weren't upsidedown, as the same plane meant they were in same direction even when they should really mirror each other
+So now we have a object we need to do the uv map, which we required some creative intent, as the cube can be unfolded in a myriad of ways.
+Unlike a cylindrical wall, which had a pretty cut and dry approach to UV maps. We went for the design below that centred around the back wall,
+as this would seem to be the focus in a led room with an open doorway.
 
-So now we have a object we need to do the uv map, which we required some creative intent, as the cube can be unfolded in a myriad of ways. Unlike a cylindrical wall, which had a pretty cut and dry approach to UV maps. Went for *insert* design that centred around the back wall, as this would seem to be the focus in a led room with an open doorway.
+!["a cube uv map"](./cubeUV.jpg)
 
-First sets were all opposite, had to include an inverse function so the LEDs looked like they lit up the inside of a room.
+However this was not the end for the cube UV map, as each mirroring face had one facing the wrong direction.
+The horizontal coordinates then had to be flipped again for the right wall and the vertical coordinates of the
+bottom panel. This was sometimes figured out through trial and error.
+
+!["a complete cube"](./cubeview.jpg)
