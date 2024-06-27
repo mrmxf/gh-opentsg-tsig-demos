@@ -8,7 +8,6 @@ package shapes
 import (
 	"encoding/json"
 	"fmt"
-	"generator/handler"
 	"io"
 	"math"
 
@@ -17,7 +16,7 @@ import (
 
 // add the shape to the mian handler here
 func init() {
-	handler.AddShape[SphereCap]("", "")
+	AddShapeToHandler[SphereCap]("", "")
 }
 
 // sphere properties
@@ -29,6 +28,7 @@ type SphereCap struct {
 	AzimuthMaxAngle float64 `json:"azimuthMaxAngle" yaml:"azimuthMaxAngle"`
 	Dx              float64 `json:"dx" yaml:"dx"`
 	Dy              float64 `json:"dy" yaml:"dy"`
+	ShapeName
 }
 
 func (s SphereCap) ObjType() string {

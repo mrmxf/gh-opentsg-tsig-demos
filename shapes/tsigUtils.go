@@ -2,12 +2,6 @@ package shapes
 
 import "math"
 
-// Init ensures all the shapes init functions are called,
-// it does nothing else
-func Init() {
-
-}
-
 // PolarToCartesian takes polar coordinates of R, theta (inclination angle) and
 // phi (Azimuth angle) and converts them to cartesian XYZ
 func PolarToCartesian(r, theta, phi float64) (X, Y, Z float64) {

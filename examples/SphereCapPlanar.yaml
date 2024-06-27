@@ -10,3 +10,5 @@ azimuthMaxAngle: 0.5235987755982988
 # pixel change per tile
 dx: 960
 dy: 960
+
+shape: spherecap

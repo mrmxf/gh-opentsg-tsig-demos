@@ -3,7 +3,6 @@ package shapes
 import (
 	"encoding/json"
 	"fmt"
-	"generator/handler"
 	"io"
 	"math"
 
@@ -11,7 +10,7 @@ import (
 )
 
 func init() {
-	handler.AddShape[Curve]("", "")
+	AddShapeToHandler[Curve]("", "")
 }
 
 // Curve Properties

@@ -12,7 +12,6 @@ package shapes
 import (
 	"encoding/json"
 	"fmt"
-	"generator/handler"
 	"io"
 	"math"
 
@@ -22,7 +21,7 @@ import (
 // add the shape to the mian handler here
 func init() {
 
-	handler.AddShape[Cube]("", "")
+	AddShapeToHandler[Cube]("", "")
 }
 
 // Cube properties
