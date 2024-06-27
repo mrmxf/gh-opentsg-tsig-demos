@@ -15,8 +15,13 @@ Make sure you are familiar with [OpenTSG][t1] and what
 [TSIGs][t2] are and how they are used.
 
 In short TSIGs allow you to generate test patterns for 3d displays,
-with pixel accurate mapping. These TSIgs are used as
+with pixel accurate mapping. These TSIGs are used as
 an input for OpenTSG, which generates the test signal.
+
+Please note every obj file produced has tha z axis
+as the vertical axis, so when importing the obj
+into your software of choice you can get the
+object the right way up.
 
 ## Installation
 
@@ -29,7 +34,22 @@ Then run the go build command to compile the code.
 go build
 ```
 
+## commands
+
+The default command is to generate both the obj and tsig
+files.
+
+The `obj` command ensures only an obj file is written.
+
+The `tsig` command ensures only a Tsig tile is written.
+
+The `list` command list the available shapes and their shape names
+
 ## flags
+
+### Generate flags
+
+These flags work for every obj and tsig generating command
 
 The `--conf` flag tells the cli which input yaml (or json) to parse.
 
@@ -38,18 +58,57 @@ the input string is without the inclusion of the file extension.
 e.g.  `--outputFile ./examples/example` will produce two files,
 `./examples/example.obj` and `./examples/example.json`
 
+### list flags
+
+To be added
+
 ## Demos
 
 Ensure the command line is installed with
 `./generator --help`
 
-Please note every obj produced has tha z axis
-as the vertical axis, so when importing the obj
-into your software of choice you can get the
-object the right way up.
+Then you can run the first demo generating a cube obj and tsig with
+the following command. This will make 2 seperate files, of one obj and
+one json tsig file.
 
-The following list of demos will take you through
-generating an obj and tsig for that shape.
+```cmd
+./generator --conf ./examples/cube.yaml --outputFile ./examples/cube
+```
+
+If you check the `./examples` folder you will have generated
+`./examples/cube.obj` and `./examples/cube.tsig`. Congratulations on
+making your first tsig!
+
+### Obj only Demo
+
+If you just want to make the obj then you can specify that with the `obj`
+flag. Run the following code below to just make the cube obj.
+
+```cmd
+./generator obj --conf ./examples/cube.yaml --outputFile ./examples/ObjOnly
+```
+
+If you check the `./examples` folder you will have generated
+`./examples/ObjOnly.obj`, there is no TSIG in sight.
+
+### TSIG Only Demo
+
+If you just want to make the tsig then you can specify that with the `tsig`
+flag. Run the following code below to just make the cube tsig.
+
+```cmd
+./generator obj --conf ./examples/cube.yaml --outputFile ./examples/tsigOnly
+```
+
+If you check the `./examples` folder you will have generated
+`./examples/tsigOnly.json`, there is no obj in sight.
+
+### Available shapes
+
+The following list of shapes will take you through
+the config file for that shape. The config files can
+be in json or yaml, the field names will be the same 
+for both.
 
 - [Cube][cbd]
 - [Curve][cvd]
@@ -60,42 +119,135 @@ plugged into openTSG.
 
 ### Cube Demo
 
-This demo will walk you through generating a cube shape display
+This demo will walk you through generating a cube shape display,
+with a missing front panel. There is no option to add the front
+panel in.
 
 The cube demo is run with an input file of `./examples/cube.yaml`
-which looks like
+which looks like.
 
 ```yaml
+# The file type identifier
+shape: cube
 # tile dimensions
 tileHeight: 0.5
 tileWidth: 0.5
 # cube dimensions
+# X dimensions
 cubeWidth: 5
+# Z dimensions
 cubeHeight: 5
+# Y dimension
 cubeDepth: 2.5
 # Pixels per tile
+# dx matches the tile width
+dx: 500
+# dy matches the tile height
+dy: 500
+```
+
+Every field is required
+
+Run the following to generate the cube tsig and obj files.
+
+```cmd
+./generator --conf ./examples/cube.yaml --outputFile ./examples/cube
+```
+
+The generated files will be in `./examples`
+as `./examples/cube.obj` and `./examples/cube.json`.
+Plug the obj into an obj visualiser and see how it looks.
+Then try using  the tsig with openTSG to generate a
+pattern of your choosing.
+
+Feel free to change any of the values in the file
+and run it again, try changing the depth to make
+the cube really shallow.
+
+### Curve Demo
+
+This demo will walk you through generating a curved wall display.
+
+The curve demo is run with an input file of `./examples/curve.yaml`
+which looks like.`
+
+```yaml
+# The file type identifier
+shape: curve
+# tile dimensions
+tileHeight: 0.5
+tileWidth: 0.5
+# cylinder dimensions
+cylinderRadius: 5
+cylinderHeight: 5
+# Max angle in radians
+# will be 30 degrees either side of the azimuth
+# in this example.
+azimuthMaxAngle: 0.5235987755982988
+# Pixels per tile
+dx: 500
+dy: 500
+
+```
+
+Every field is required
+
+Run the following to generate the curve obj and tsig files.
+
+```cmd
+./generator --conf ./examples/curve.yaml --outputFile ./examples/curve
+```
+
+The generated files will be in `./examples`
+as `./examples/curve.obj` and `./examples/curve.json`.
+Plug the obj into an obj visualiser and see how it looks.
+Then try using  the tsig with openTSG to generate a
+pattern of your choosing.
+
+Feel free to change any of the values in the file
+and run it again, change the angle and see how the uv map changes.
+
+### Spherecap Demo
+
+This demo will walk you through generating a spherecap wall display.
+
+The spherecap demo is run with an input file of `./examples/SphereCap.yaml`
+which looks like.
+
+```yaml
+# The file type identifier
+shape: spherecap
+# tile dimensions
+tileHeight: 0.5
+tileWidth: 0.5
+# Sphere dimensions
+radius: 5
+# Max angle in radians
+# will be 30 degrees either side of the azimuth
+# in this example, and 30 degrees either side of
+# the inclination (theta).
+thetaMaxAngle: 0.5235987755982988
+azimuthMaxAngle: 0.5235987755982988
+# pixel change per tile
 dx: 500
 dy: 500
 ```
 
-```cmd
-./generator cube --conf ./examples/cube.yaml --outputFile ./examples/cube
-```
-
-Check ./examples/cube for the the output files of obj and json
-congratulations you've now made your first obj and TSIG.
-
-### Curve Demo
+Run the following to generate the spherecap files.
 
 ```cmd
-./generator curve --conf ./examples/curve.yaml --outputFile ./examples/curve
+./generator --conf ./examples/SphereCap.yaml --outputFile ./examples/spherecap
 ```
 
-### SphereCap Demo
+The generated files will be in `./examples`
+as `./examples/spherecap.obj` and `./examples/spherecap.json`.
+Plug the obj into an obj visualiser and see how it looks.
+Then try using  the tsig with openTSG to generate a
+pattern of your choosing.
 
-```cmd
-./generator spherecap --conf ./examples/sphere.yaml --outputFile ./examples/sphere
-```
+Feel free to change any of the values in the file
+and run it again, change the angles, try making
+a wide view spherecap screen.
 
 ## Golden ratios
 
@@ -119,4 +271,4 @@ The sphere uv map
 
 [cbd]: #cube-demo
 [cvd]: #curve-demo
-[spd]: #sphere-demo
+[spd]: #spherecap-demo

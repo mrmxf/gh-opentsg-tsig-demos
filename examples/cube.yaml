@@ -1,11 +1,17 @@
+# The file type identifier
 shape: cube
 # tile dimensions
 tileHeight: 0.5
 tileWidth: 0.5
 # cube dimensions
+# X dimensions
 cubeWidth: 5
+# Z dimensions
 cubeHeight: 5
+# Y dimension
 cubeDepth: 2.5
 # Pixels per tile
+# dx matches the tile width
 dx: 500
+# dy matches the tile height
 dy: 500

@@ -3,7 +3,8 @@
 tileHeight: 0.3874
 tileWidth: 0.3874
 radius: 3.8
-
+# The file type identifier
+shape: spherecap
 #Angles are in radians
 thetaMaxAngle: 0.5235987755982988
 azimuthMaxAngle: 0.5235987755982988
@@ -11,4 +12,3 @@ azimuthMaxAngle: 0.5235987755982988
 dx: 960
 dy: 960
 
-shape: spherecap

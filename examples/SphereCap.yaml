@@ -1,9 +1,12 @@
+# The file type identifier
 shape: spherecap
+# tile dimensions
 tileHeight: 0.5
 tileWidth: 0.5
-
+# Sphere dimensions
 radius: 5
 thetaMaxAngle: 0.5235987755982988
 azimuthMaxAngle: 0.5235987755982988
+# pixel change per tile
 dx: 500
 dy: 500

@@ -21,7 +21,7 @@ import (
 // add the shape to the mian handler here
 func init() {
 
-	AddShapeToHandler[Cube]("", "")
+	AddShapeToHandler[Cube]("An open faced cube", "An open faced cube")
 }
 
 // Cube properties
