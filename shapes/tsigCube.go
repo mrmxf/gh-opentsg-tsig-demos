@@ -61,8 +61,8 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 	}
 
 	// get the dimensions of the flat display.
-	pixelWidth := (c.CubeWidth + c.CubeDepth*2) * c.Dx
-	pixelHeight := (c.CubeDepth*2 + c.CubeHeight) * c.Dy
+	pixelWidth := ((c.CubeWidth + c.CubeDepth*2) / c.TileWidth) * c.Dx
+	pixelHeight := ((c.CubeDepth*2 + c.CubeHeight) / c.TileHeight) * c.Dy
 
 	// count of tiles in each segment of cube
 	leftRight := int((c.CubeDepth * 2 / c.TileWidth) * (c.CubeHeight / c.TileHeight))
@@ -72,7 +72,6 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 	tiles := make([]gridgen.Tilelayout, leftRight+topbot+back)
 
 	// calculate the uv map steps in each direction
-
 	uStep := c.TileWidth / (c.CubeWidth + c.CubeDepth*2)
 	vStep := c.TileHeight / (c.CubeDepth*2 + c.CubeHeight)
 
@@ -90,7 +89,6 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 		planeConst float64
 		// one of "x", "y" or "z"
 		plane string
-
 		// is it facing the expected direction
 		inverse bool
 	}
@@ -98,18 +96,23 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 	// set all the planes of the cube
 	planes := []plane{
 		// left wall
-		{iEnd: c.CubeDepth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: 0, plane: "y", vStart: (c.CubeDepth / c.TileHeight) * vStep, inverse: true, uStart: ((c.CubeDepth + c.CubeWidth) / c.TileWidth) * uStep},
+		{iEnd: c.CubeDepth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: 0,
+			plane: "y", vStart: (c.CubeDepth / c.TileHeight) * vStep, inverse: true, uStart: ((c.CubeDepth + c.CubeWidth) / c.TileWidth) * uStep},
 		// right wall
-		{iEnd: c.CubeDepth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: c.CubeWidth, plane: "y", vStart: (c.CubeDepth / c.TileHeight) * vStep},
+		{iEnd: c.CubeDepth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight,
+			planeConst: c.CubeWidth, plane: "y", vStart: (c.CubeDepth / c.TileHeight) * vStep},
 
 		// back wall
-		{iEnd: c.CubeWidth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: c.CubeDepth, plane: "x", vStart: (c.CubeDepth / c.TileHeight) * vStep, uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
+		{iEnd: c.CubeWidth, jEnd: c.CubeHeight, iStep: c.TileWidth, jStep: c.TileHeight,
+			planeConst: c.CubeDepth, plane: "x", vStart: (c.CubeDepth / c.TileHeight) * vStep, uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
 
 		// Top
-		{iEnd: c.CubeDepth, inverse: true, jEnd: c.CubeWidth, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: c.CubeHeight, plane: "z", vStart: ((c.CubeDepth + c.CubeHeight) / c.TileHeight) * vStep, uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
+		{iEnd: c.CubeDepth, inverse: true, jEnd: c.CubeWidth, iStep: c.TileWidth, jStep: c.TileHeight,
+			planeConst: c.CubeHeight, plane: "z", vStart: ((c.CubeDepth + c.CubeHeight) / c.TileHeight) * vStep, uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
 
 		// Bottom
-		{iEnd: c.CubeDepth, jEnd: c.CubeWidth, iStep: c.TileWidth, jStep: c.TileHeight, planeConst: 0, plane: "z", uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
+		{iEnd: c.CubeDepth, jEnd: c.CubeWidth, iStep: c.TileWidth, jStep: c.TileHeight,
+			planeConst: 0, plane: "z", uStart: ((c.CubeDepth) / c.TileWidth) * uStep},
 	}
 
 	// vertexCount the vertexes per face
@@ -126,6 +129,7 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 		ujwidth := ujTotal * uStep
 
 		iCount := 0
+		// the obj buffer
 		tileFace := ""
 
 		for i := p.iStart; i < p.iEnd; i += p.iStep {
@@ -148,7 +152,7 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
 					tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
 
-					tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
+					tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + width - float64(iCount+1)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
 				case "y":
 
@@ -164,6 +168,7 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+width-float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
+						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + width - float64(iCount+1)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
 					} else {
 
@@ -171,9 +176,9 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount+1)*uStep, p.vStart+float64(jCount+1)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+float64(iCount)*uStep, p.vStart+float64(jCount+1)*vStep)
-					}
+						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + width - float64(iCount+1)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
 
-					tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + width - float64(iCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(jCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
+					}
 
 				case "z":
 					tileFace += fmt.Sprintf("v %v %v %v \n", i, j+p.jStep, p.planeConst)
@@ -188,14 +193,15 @@ func (c Cube) Generate(wObj, wTsig io.Writer) error {
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+(uTotal-float64(iCount+1))*vStep)
 
-						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + (uTotal-float64(iCount))*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
+						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount+1)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + (uTotal-float64(iCount))*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
+
 					} else {
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount)*uStep, p.vStart+float64(iCount+1)*vStep)
 						tileFace += fmt.Sprintf("vt %v %v \n", p.uStart+ujwidth-float64(jCount+1)*uStep, p.vStart+float64(iCount+1)*vStep)
 
-						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(iCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
+						tiles[tileCount] = gridgen.Tilelayout{Layout: gridgen.Positions{Flat: gridgen.XY{X: int(math.Round((p.uStart + ujwidth - float64(jCount+1)*uStep) * pixelWidth)), Y: int(math.Round((1 - (p.vStart + float64(iCount+1)*vStep)) * pixelHeight))}, Size: gridgen.XY{X: int(c.Dx), Y: int(c.Dy)}}}
 					}
 
 				default:

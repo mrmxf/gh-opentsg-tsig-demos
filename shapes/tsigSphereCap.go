@@ -62,7 +62,9 @@ func (s SphereCap) Generate(wObj, wTsig io.Writer) error {
 	maxX := 2 * math.Ceil(s.AzimuthMaxAngle/azimuthInc) * s.Dx
 	maxY := 2 * math.Ceil(s.ThetaMaxAngle/thetaInc) * s.Dy
 
-	//
+	// calculate the overrun by looping through a segment of the
+	// sphere cap and seeing if the u value exceeds the regular bounds of
+	// 1. Due to the pixel shifting that happens
 	overrun := 1.0
 	for theta > (math.Pi/2)-s.ThetaMaxAngle {
 		topLeftTheta := theta - thetaInc
@@ -95,6 +97,7 @@ func (s SphereCap) Generate(wObj, wTsig io.Writer) error {
 		theta -= thetaInc
 	}
 
+	// reset theta back to what it was
 	theta = math.Pi / 2
 
 	xInc := 0.0
@@ -103,17 +106,12 @@ func (s SphereCap) Generate(wObj, wTsig io.Writer) error {
 	}
 
 	// update the parameters to account for the overrun
-	// of tiles
+	// of tiles, if present
 	maxX = maxX + xInc*2
 	uTileWidth = s.Dx / maxX
 
 	tiles := []gridgen.Tilelayout{}
 
-	// -33 is the lowest
-	//sizex := 3840
-	/*
-	   generate the size of the bas eimage then move erveything along
-	*/
 	// TOP
 	v := 0.5
 

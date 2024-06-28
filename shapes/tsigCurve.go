@@ -104,6 +104,7 @@ func (c Curve) Generate(wObj, wTsig io.Writer) error {
 		// as well as the uv map height
 		v += vheight
 		z += c.TileHeight
+		// reset the azimuth to the start point
 		azimuth = -c.AzimuthMaxAngle
 	}
 

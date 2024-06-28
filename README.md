@@ -36,12 +36,12 @@ go build
 
 ## commands
 
-The default command is to generate both the obj and tsig
+The default command `gen` generates both the obj and TSIG
 files.
 
 The `obj` command ensures only an obj file is written.
 
-The `tsig` command ensures only a Tsig tile is written.
+The `tsig` command ensures only a TSIG tile is written.
 
 The `list` command list the available shapes and their shape names
 
@@ -49,7 +49,7 @@ The `list` command list the available shapes and their shape names
 
 ### Generate flags
 
-These flags work for every obj and tsig generating command
+These flags work for every obj and TSIG generating command
 
 The `--conf` flag tells the cli which input yaml (or json) to parse.
 
@@ -64,25 +64,27 @@ To be added
 
 ## Demos
 
-Ensure the command line is installed with
+Ensure the command line is installed and running with
 `./generator --help`
+The name of the program may change based on your operating system.
 
-Then you can run the first demo generating a cube obj and tsig with
-the following command. This will make 2 seperate files, of one obj and
-one json tsig file.
+Then you can run the first demo, which will generate a cube obj and
+TSIG. This will make 2 separate files, of one obj and
+one json TSIG file. Run the following command
 
 ```cmd
 ./generator --conf ./examples/cube.yaml --outputFile ./examples/cube
 ```
 
-If you check the `./examples` folder you will have generated
-`./examples/cube.obj` and `./examples/cube.tsig`. Congratulations on
-making your first tsig!
+Now to find the output at the `./examples` folder
+you will have generated `./examples/cube.obj`
+and `./examples/cube.json`. Congratulations on
+making your first TSIG!
 
 ### Obj only Demo
 
 If you just want to make the obj then you can specify that with the `obj`
-flag. Run the following code below to just make the cube obj.
+command. Run the following code below to just make the cube obj.
 
 ```cmd
 ./generator obj --conf ./examples/cube.yaml --outputFile ./examples/ObjOnly
@@ -93,11 +95,11 @@ If you check the `./examples` folder you will have generated
 
 ### TSIG Only Demo
 
-If you just want to make the tsig then you can specify that with the `tsig`
-flag. Run the following code below to just make the cube tsig.
+If you just want to make the TSIG then you can specify that with the `tsig`
+flag. Run the following code below to just make the cube TSIG.
 
 ```cmd
-./generator obj --conf ./examples/cube.yaml --outputFile ./examples/tsigOnly
+./generator tsig --conf ./examples/cube.yaml --outputFile ./examples/tsigOnly
 ```
 
 If you check the `./examples` folder you will have generated
@@ -107,8 +109,8 @@ If you check the `./examples` folder you will have generated
 
 The following list of shapes will take you through
 the config file for that shape. The config files can
-be in json or yaml, the field names will be the same 
-for both.
+be in json or yaml, the field names will be the same
+for both file types.
 
 - [Cube][cbd]
 - [Curve][cvd]
@@ -148,7 +150,7 @@ dy: 500
 
 Every field is required
 
-Run the following to generate the cube tsig and obj files.
+Run the following to generate the cube TSIG and obj files.
 
 ```cmd
 ./generator --conf ./examples/cube.yaml --outputFile ./examples/cube
@@ -157,7 +159,7 @@ Run the following to generate the cube tsig and obj files.
 The generated files will be in `./examples`
 as `./examples/cube.obj` and `./examples/cube.json`.
 Plug the obj into an obj visualiser and see how it looks.
-Then try using  the tsig with openTSG to generate a
+Then try using  the TSIG with openTSG to generate a
 pattern of your choosing.
 
 Feel free to change any of the values in the file
@@ -192,7 +194,7 @@ dy: 500
 
 Every field is required
 
-Run the following to generate the curve obj and tsig files.
+Run the following to generate the curve obj and TSIG files.
 
 ```cmd
 ./generator --conf ./examples/curve.yaml --outputFile ./examples/curve
@@ -201,7 +203,7 @@ Run the following to generate the curve obj and tsig files.
 The generated files will be in `./examples`
 as `./examples/curve.obj` and `./examples/curve.json`.
 Plug the obj into an obj visualiser and see how it looks.
-Then try using  the tsig with openTSG to generate a
+Then try using  the TSIG with openTSG to generate a
 pattern of your choosing.
 
 Feel free to change any of the values in the file
@@ -242,7 +244,7 @@ Run the following to generate the spherecap files.
 The generated files will be in `./examples`
 as `./examples/spherecap.obj` and `./examples/spherecap.json`.
 Plug the obj into an obj visualiser and see how it looks.
-Then try using  the tsig with openTSG to generate a
+Then try using  the TSIG with openTSG to generate a
 pattern of your choosing.
 
 Feel free to change any of the values in the file

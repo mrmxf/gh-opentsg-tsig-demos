@@ -78,7 +78,7 @@ func RunHandler() error {
 
 // @TODO update to three modes one is default so should run wihtout the key
 var cmdBoth = &cobra.Command{
-	Use:   "",
+	Use:   "gen",
 	Short: "TSIG and OBJ builder",
 	Long: `
 	TSIG and OBJ builder
