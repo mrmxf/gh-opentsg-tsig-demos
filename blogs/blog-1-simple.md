@@ -56,10 +56,12 @@ The vertexes corners corresponded to:
 The radius is constant throughout.
 
 These cylindrical coordinates were then converted to cartesian ones with following formulas.
+(Apologies if the formatting is not correct on gitlab or github is not correct, they 
+might be missing the KaTeX backend)
 
 ```mermaid
 graph LR
-    A["$$x = r cos(\phi)$$ <br> $$ y = r sin(\phi)$$ <br> $$z = z$$"]
+    A["$$ x = r cos(\phi)$$ <br> $$ y = r sin(\phi)$$ <br> $$ z = z$$"]
 ```
 
 The uv map was created by incrementing the tile heights and widths, treating the angle
