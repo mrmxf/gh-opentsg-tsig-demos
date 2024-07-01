@@ -29,14 +29,19 @@ func init() {
 }
 
 // shapes is a map of shapeName - yaml decoder to that type
-var shapes = map[string]func([]byte) (Generator, error){}
+var shapes = map[string]shapeProperties{}
+
+type shapeProperties struct {
+	unmarshaler func([]byte) (Generator, error)
+	desc        string
+}
 
 /*
 AddShapeToHandler adds a shape of type generator to be handled by the program.
 
 Call this function during the init stage, before the main program runs.
 */
-func AddShapeToHandler[gen Generator](ShortDesc, LongDesc string) {
+func AddShapeToHandler[gen Generator](description string) {
 
 	var shp gen
 	shpName := shp.ObjType()
@@ -44,7 +49,7 @@ func AddShapeToHandler[gen Generator](ShortDesc, LongDesc string) {
 		panic(fmt.Sprintf("Shape type %s has been overwritten. Please ensure each name is unique", shpName))
 	}
 
-	shapes[shpName] = unmarshalGenerator[gen]
+	shapes[shpName] = shapeProperties{unmarshaler: unmarshalGenerator[gen], desc: description}
 
 }
 
@@ -121,8 +126,8 @@ var cmdList = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		fmt.Println("Available shapes are:")
-		for s := range shapes {
-			fmt.Printf(" - %v \n", s)
+		for s, props := range shapes {
+			fmt.Printf(" - %v: %v \n", s, props.desc)
 		}
 
 		return nil
@@ -166,7 +171,7 @@ func genShapeNew(tsig, obj bool) func(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("no shape with the name %v found", name.Shape)
 		}
 
-		shp, err := shpUnmarshal(confBytes)
+		shp, err := shpUnmarshal.unmarshaler(confBytes)
 		if err != nil {
 			return err
 		}

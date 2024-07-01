@@ -21,18 +21,25 @@ import (
 // add the shape to the main handler here
 func init() {
 
-	AddShapeToHandler[Cube]("An open faced cube", "An open faced cube")
+	AddShapeToHandler[Cube]("An open faced cube")
 }
 
 // Cube properties
 type Cube struct {
+	// dimensions of the tiles
 	TileHeight float64 `json:"tileHeight" yaml:"tileHeight"`
 	TileWidth  float64 `json:"tileWidth" yaml:"tileWidth"`
-	CubeWidth  float64 `json:"cubeWidth" yaml:"cubeWidth"`
+	// x dimension
+	CubeWidth float64 `json:"cubeWidth" yaml:"cubeWidth"`
+	// z dimension
 	CubeHeight float64 `json:"cubeHeight" yaml:"cubeHeight"`
-	CubeDepth  float64 `json:"cubeDepth" yaml:"cubeDepth"`
-	Dx         float64 `json:"dx" yaml:"dx"`
-	Dy         float64 `json:"dy" yaml:"dy"`
+	// y dimension
+	CubeDepth float64 `json:"cubeDepth" yaml:"cubeDepth"`
+	// pixels per direction
+	Dx float64 `json:"dx" yaml:"dx"`
+	Dy float64 `json:"dy" yaml:"dy"`
+	// shape name of cube
+	ShapeName
 }
 
 func (c Cube) ObjType() string {

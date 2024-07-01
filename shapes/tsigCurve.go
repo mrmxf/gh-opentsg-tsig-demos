@@ -15,18 +15,25 @@ import (
 )
 
 func init() {
-	AddShapeToHandler[Curve]("", "")
+	AddShapeToHandler[Curve]("A curved wall")
 }
 
 // Curve Properties
 type Curve struct {
-	TileHeight      float64 `json:"tileHeight" yaml:"tileHeight"`
-	TileWidth       float64 `json:"tileWidth" yaml:"tileWidth"`
-	CurveRadius     float64 `json:"cylinderRadius" yaml:"cylinderRadius"`
-	CurveHeight     float64 `json:"cylinderHeight" yaml:"cylinderHeight"`
+	// dimensions of the tiles
+	TileHeight float64 `json:"tileHeight" yaml:"tileHeight"`
+	TileWidth  float64 `json:"tileWidth" yaml:"tileWidth"`
+	// the physical curve properties
+	CurveRadius float64 `json:"cylinderRadius" yaml:"cylinderRadius"`
+	CurveHeight float64 `json:"cylinderHeight" yaml:"cylinderHeight"`
+	// max angle in radians, is the max angle in both directions from the origin,
+	// so the angle of the curve will be double this value.
 	AzimuthMaxAngle float64 `json:"azimuthMaxAngle" yaml:"azimuthMaxAngle"`
-	Dx              float64 `json:"dx" yaml:"dx"`
-	Dy              float64 `json:"dy" yaml:"dy"`
+	// pixel count properties
+	Dx float64 `json:"dx" yaml:"dx"`
+	Dy float64 `json:"dy" yaml:"dy"`
+	// shape name of "curve"
+	ShapeName
 }
 
 func (c Curve) ObjType() string {

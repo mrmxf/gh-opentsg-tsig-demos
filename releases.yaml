@@ -1,0 +1,5 @@
+# code names here: https://en.wikipedia.org/wiki/List_of_two-dimensional_geometric_shapes
+- version:	   "0.1.0"
+  date:        2024-07-01
+  codename:    arbelos
+  note:        initial commit, of cube, sphere and curved walls

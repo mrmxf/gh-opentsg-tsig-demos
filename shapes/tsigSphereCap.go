@@ -16,18 +16,27 @@ import (
 
 // add the shape to the mian handler here
 func init() {
-	AddShapeToHandler[SphereCap]("", "")
+	AddShapeToHandler[SphereCap]("A spherical cap created of square tiles")
 }
 
 // sphere properties
 type SphereCap struct {
-	TileHeight      float64 `json:"tileHeight" yaml:"tileHeight"`
-	TileWidth       float64 `json:"tileWidth" yaml:"tileWidth"`
-	Radius          float64 `json:"radius" yaml:"radius"`
-	ThetaMaxAngle   float64 `json:"thetaMaxAngle" yaml:"thetaMaxAngle"`
+	// dimensions of the tiles
+	TileHeight float64 `json:"tileHeight" yaml:"tileHeight"`
+	TileWidth  float64 `json:"tileWidth" yaml:"tileWidth"`
+	// physical properties of the sphere cap
+	Radius float64 `json:"radius" yaml:"radius"`
+	// max angle in radians, is the max angle in both directions from the origin,
+	// so the angle of the curve will be double this value.
+	// this is the inclination angle.
+	ThetaMaxAngle float64 `json:"thetaMaxAngle" yaml:"thetaMaxAngle"`
+	// the azimuth angle in radians, follows the same rules as the inclination
+	// but tops at out pi radians.
 	AzimuthMaxAngle float64 `json:"azimuthMaxAngle" yaml:"azimuthMaxAngle"`
-	Dx              float64 `json:"dx" yaml:"dx"`
-	Dy              float64 `json:"dy" yaml:"dy"`
+	// pixels in each direction of the tile
+	Dx float64 `json:"dx" yaml:"dx"`
+	Dy float64 `json:"dy" yaml:"dy"`
+	// shape name of "spherecap"
 	ShapeName
 }
 

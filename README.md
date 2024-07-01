@@ -7,7 +7,7 @@ Available display shapes are
 
 - An open cube (No front wall panel)
 - A curved cylindrical wall
-- A Spherical display
+- A spherical cap display
 
 ## Getting started
 
@@ -43,7 +43,7 @@ The `obj` command ensures only an obj file is written.
 
 The `tsig` command ensures only a TSIG tile is written.
 
-The `list` command list the available shapes and their shape names
+The `list` command list the available shapes and their brief descriptions.
 
 ## flags
 
@@ -51,7 +51,7 @@ The `list` command list the available shapes and their shape names
 
 These flags work for every obj and TSIG generating command
 
-The `--conf` flag tells the cli which input yaml (or json) to parse.
+The `--conf` flag tells the cli which input file to parse.
 
 The `--outputFile` tells the name of the file(s) to be saved,
 the input string is without the inclusion of the file extension.
@@ -249,7 +249,7 @@ pattern of your choosing.
 
 Feel free to change any of the values in the file
 and run it again, change the angles, try making
-a wide view spherecap screen.
+a wide view spherecap screen by increasing `azimuthMaxAngle:` to 1.309.
 
 ## Golden ratios
 
@@ -257,6 +257,54 @@ Any numbers that seem to work really well.
 e.g. Dx* tile width / radius must = 5
 
 ## Technical stuff
+
+### Developer notes
+
+Make your self familiar with the obj format [here][o1].
+
+Each tile will follow this sort of design in the code,
+where v is the xyz coordinate of the vertex, and vt is the
+uv coordinate of the texture.
+
+```obj
+v 0 0 0 
+v 0.5 0 0 
+v 0.5 0 0.5 
+v 0 0 0.5 
+vt 1 0.25 
+vt 0.95 0.25 
+vt 0.95 0.3 
+vt 1 0.3 
+f 1/1 2/2 3/3 4/4
+```
+
+That tile would look like this in a TSIG.
+
+```json
+{
+            "Name": "",
+            "Tags": null,
+            "Neighbours": null,
+            "Layout": {
+                "Carve": {
+                    "X": 0,
+                    "Y": 0
+                },
+                "Flat": {
+                    "X": 9500,
+                    "Y": 7000
+                },
+                "XY": {
+                    "X": 500,
+                    "Y": 500
+                }
+            }
+        }
+```
+
+Where the flat coordinate relates to this uv map position `vt 0.95 0.25`,
+and the rest of the coordinates are found from the `"XY"` field that gives
+the height and width of the tile.
 
 Cube uv map design.
 
