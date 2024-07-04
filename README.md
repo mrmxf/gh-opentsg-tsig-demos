@@ -1,6 +1,6 @@
 # tsig demos
 
-A commad line tool for generating 3d displays in the
+A command line tool for generating 3d displays in the
 [obj][o1] and [TSIG][t2] formats.
 
 Available display shapes are
@@ -114,7 +114,7 @@ for both file types.
 
 - [Cube][cbd]
 - [Curve][cvd]
-- [Sphere][spd]
+- [Spherecap][spd]
 
 Once a demo has been run, the TSIG output can be
 plugged into openTSG.
