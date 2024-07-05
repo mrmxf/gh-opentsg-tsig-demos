@@ -34,7 +34,7 @@ Then run the go build command to compile the code.
 go build
 ```
 
-## commands
+## Commands
 
 The default command `gen` generates both the obj and TSIG
 files.
@@ -45,7 +45,7 @@ The `tsig` command ensures only a TSIG tile is written.
 
 The `list` command list the available shapes and their brief descriptions.
 
-## flags
+## Flags
 
 ### Generate flags
 

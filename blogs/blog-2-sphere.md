@@ -1,22 +1,22 @@
 # Spheres squares and sadness
 
-Continuing our journey into 3d displays we tackle a spherecap,
+Continuing our journey into 3d displays we now tackle a spherecap,
 made entirely from square display tiles.
 We will building from the lessons learnt in blog1 *link*,
 if you missed it feel free to check it out.
 
 ## The sphere cap
 
-A sphere cap is only a section of a sphere, and we chose this because
-it matches the type of displays currently out there. e.g. A planetarium,
-there are no spherical displays that are true spheres? @TODO check if it eneds to be removed
+A sphere cap is the cap section of a sphere, and we chose this because
+it matches the type of displays currently out there. e.g. A planetarium.
+Complete spheres are not a common display, if any exist.
 
 A new shape meant another new coordinate system, this time we'll be using
-[spherical coordinates][sc]. However this means we now have two angles to contend
+[spherical coordinates][sc]. This means we now have two angles to contend
 with, as we move our square tiles around to construct the sphere cap.
 
 We will go back to using the chordal length formula again,
-this time with a little tweak to accommodate two dimensions being angles.
+this time with a little tweak to accommodate having two angles.
 To calculate the angle for change in inclination we can use the same
 chordal length formula as last time.
 
@@ -30,20 +30,41 @@ the formula for finding the azimuth is now this.
 
 !["The chordal length formula for a sphere"][cls]
 
-First we find the inclination increment, as this is constant throughout.
-As we step to each new inclination we calculate the azimuth step.
+First we find the inclination increment, as this is constant throughout the sphere.
+Then as we step to each new inclination we calculate the azimuth step.
 At first the same azimuth increment was used for the top and bottom of the tile coordinates,
 this was my first mistake as the tiles overlapped each other in the corners.
 Why? The increments varied slightly due to the inclination as mentioned earlier, so the
 angle change was actually moving the tile along further than intended.
 So we had to go back and calculate the angle change at the top and the bottom of the
 tiles, after doing this we ended up with wonky parallelogram tiles.
-The start points for each tile at top and the bottom increased unevenly as the
+This was because start points for each tile at top and the bottom increased unevenly as the
 angles were not equal, so the start points got further apart the larger the azimuth was.
 
 We had to fix this by starting the bottom azimuth from where the top azimuth stopped.
 This resulted in a slight gap that increased in size as you went down the tile,
-but this is as close we'll get with squares.
+but this is as close we'll get with a curved object made of flat tiles.
+
+Once we figured out how to get the angle steps right the
+vertexes corners corresponded to:
+
+- v1 (r, theta, azimuth)
+- v2 (r, theta, azimuth + azimuth bottom increment)
+- v3 (r, theta + theta increment, azimuth + azimuth top increment)
+- v4 (r,  theta + theta increment, azimuth)
+
+The radius is constant throughout. We started at the inclination of pi/2, and an azimuth of 0,
+then calculated the sphere in 4 quadrants from this starting point (top left, top right, bottom left, bottom right)
+, to ensure the display was symmetrical.
+
+These cylindrical coordinates were then converted to cartesian ones with following formulas.
+(Apologies if the formatting is not correct on gitlab or github is not correct, they
+might be missing the KaTeX backend)
+
+```mermaid
+graph LR
+    A["$$ x = r sin (\theta) r cos(\phi)$$ <br> $$ y = r sin (\theta) r sin(\phi)$$ <br> $$ z = r cos (\theta)$$"]
+```
 
 Now we have the shape, we need the UV maps, how on earth are we going to get
 this non square on a square shape.
